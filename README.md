@@ -1,2 +1,3 @@
 # eduplatform
-Education platform
+
+Пустой Django-проект с базовой структурой.
