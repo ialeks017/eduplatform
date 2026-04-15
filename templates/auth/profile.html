@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Профиль | EduPlatform{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Профиль пользователя</h1>
+    <p><strong>Логин:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email|default:"—" }}</p>
+    <p><strong>Имя:</strong> {{ user.first_name|default:"—" }}</p>
+    <p><strong>Фамилия:</strong> {{ user.last_name|default:"—" }}</p>
+    <p><strong>Роль:</strong> {{ user.get_role_display }}</p>
+</div>
+{% endblock %}
