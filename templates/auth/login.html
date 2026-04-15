@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Вход | EduPlatform{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Вход в систему</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Войти</button>
+    </form>
+    <p class="muted"><a href="{% url 'password_reset' %}">Забыли пароль?</a></p>
+</div>
+{% endblock %}

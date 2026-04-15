@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Главная | EduPlatform{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>Добро пожаловать в EduPlatform</h1>
+    <p class="muted">Платформа для обучения с ролями для учеников, преподавателей и администраторов.</p>
+    {% if user.is_authenticated %}
+        <p>Вы вошли как <strong>{{ user.username }}</strong>.</p>
+        <a class="btn" href="{% url 'profile' %}">Перейти в профиль</a>
+    {% else %}
+        <a class="btn" href="{% url 'signup' %}">Создать аккаунт</a>
+    {% endif %}
+</div>
+{% endblock %}
