@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Добавить занятие | EduPlatform{% endblock %}
+{% block title %}{% if editing %}Редактировать занятие{% else %}Добавить занятие{% endif %} | EduPlatform{% endblock %}
 {% block content %}
 <div class="card">
     <a href="{% url 'courses:group_detail' group.pk %}" class="muted" style="font-size:.875rem; text-decoration:none;">← {{ group.name }}</a>
-    <h1 style="margin:.5rem 0 1.25rem;">Новое занятие</h1>
+    <h1 style="margin:.5rem 0 1.25rem;">{% if editing %}Редактировать занятие{% else %}Новое занятие{% endif %}</h1>
     <form method="post">
         {% csrf_token %}
         {% for field in form %}
@@ -22,7 +22,7 @@
                 {% endif %}
             </div>
         {% endfor %}
-        <button type="submit" style="margin-top:.5rem;">Сохранить занятие</button>
+        <button type="submit" style="margin-top:.5rem;">{% if editing %}Сохранить изменения{% else %}Создать занятие{% endif %}</button>
     </form>
 </div>
 {% endblock %}

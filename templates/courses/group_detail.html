@@ -33,7 +33,13 @@
         <div style="border:1px solid #eef0f6; border-radius:8px; padding:1rem; margin-bottom:.75rem;">
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <strong style="font-size:1rem;">{{ lesson.get_subject_display }}</strong>
-                <span class="muted" style="font-size:.875rem;">{{ lesson.created_at|date:"d.m.Y" }}</span>
+                <div style="display:flex; gap:.5rem; align-items:center;">
+                    <span class="muted" style="font-size:.875rem;">{{ lesson.created_at|date:"d.m.Y" }}</span>
+                    {% if user.role == "admin" or user in group.teachers.all %}
+                        <a href="{% url 'courses:lesson_edit' lesson.pk %}" style="font-size:.8rem; color:#3659a2; text-decoration:none; padding:.2rem .5rem; border:1px solid #3659a2; border-radius:4px;">Ред.</a>
+                        <a href="{% url 'courses:lesson_delete' lesson.pk %}" style="font-size:.8rem; color:#c0392b; text-decoration:none; padding:.2rem .5rem; border:1px solid #c0392b; border-radius:4px;">Удалить</a>
+                    {% endif %}
+                </div>
             </div>
             <div style="margin-top:.5rem; display:flex; gap:1.5rem; font-size:.875rem; color:#5b6787;">
                 <span>⏱ {{ lesson.duration_minutes }} мин</span>
