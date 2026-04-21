@@ -4,7 +4,16 @@
 <div class="card" style="margin-bottom:1rem;">
     <a href="{% url 'courses:group_list' %}" class="muted" style="font-size:.875rem; text-decoration:none;">← Все группы</a>
     <h1 style="margin:.5rem 0 .25rem;">{{ group.name }}</h1>
-    <p class="muted" style="margin:0 0 .75rem;">Преподаватель: <strong>{{ group.teacher }}</strong></p>
+
+    <div style="margin-bottom:.75rem;">
+        <span class="muted" style="font-size:.875rem;">Преподаватели:</span>
+        {% for teacher in group.teachers.all %}
+            <strong>{{ teacher }}</strong>{% if not forloop.last %}, {% endif %}
+        {% empty %}
+            <span class="muted">не назначены</span>
+        {% endfor %}
+    </div>
+
     {% if group.description %}
         <p style="margin:0 0 .75rem;">{{ group.description }}</p>
     {% endif %}
@@ -14,7 +23,7 @@
 <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <h2 style="margin:0;">Занятия</h2>
-        {% if user == group.teacher %}
+        {% if user.role == "admin" or group.teachers.all|length and user in group.teachers.all %}
             <a class="btn" href="{% url 'courses:lesson_create' group.pk %}">+ Добавить занятие</a>
         {% endif %}
     </div>

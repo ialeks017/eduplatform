@@ -11,9 +11,8 @@ class LessonInline(admin.TabularInline):
 
 @admin.register(StudyGroup)
 class StudyGroupAdmin(admin.ModelAdmin):
-    list_display = ["name", "teacher", "created_at"]
-    list_filter = ["teacher"]
-    filter_horizontal = ["students"]
+    list_display = ["name", "created_at"]
+    filter_horizontal = ["teachers", "students"]
     inlines = [LessonInline]
 
 
