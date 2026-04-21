@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ group.name }} | EduPlatform{% endblock %}
+{% block content %}
+<div class="card" style="margin-bottom:1rem;">
+    <a href="{% url 'courses:group_list' %}" class="muted" style="font-size:.875rem; text-decoration:none;">← Все группы</a>
+    <h1 style="margin:.5rem 0 .25rem;">{{ group.name }}</h1>
+    <p class="muted" style="margin:0 0 .75rem;">Преподаватель: <strong>{{ group.teacher }}</strong></p>
+    {% if group.description %}
+        <p style="margin:0 0 .75rem;">{{ group.description }}</p>
+    {% endif %}
+    <p class="muted" style="font-size:.875rem; margin:0;">Учеников: {{ group.students.count }}</p>
+</div>
+
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h2 style="margin:0;">Занятия</h2>
+        {% if user == group.teacher %}
+            <a class="btn" href="{% url 'courses:lesson_create' group.pk %}">+ Добавить занятие</a>
+        {% endif %}
+    </div>
+
+    {% if group.lessons.all %}
+        {% for lesson in group.lessons.all %}
+        <div style="border:1px solid #eef0f6; border-radius:8px; padding:1rem; margin-bottom:.75rem;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <strong style="font-size:1rem;">{{ lesson.get_subject_display }}</strong>
+                <span class="muted" style="font-size:.875rem;">{{ lesson.created_at|date:"d.m.Y" }}</span>
+            </div>
+            <div style="margin-top:.5rem; display:flex; gap:1.5rem; font-size:.875rem; color:#5b6787;">
+                <span>⏱ {{ lesson.duration_minutes }} мин</span>
+                <span>💰 {{ lesson.cost }} руб</span>
+            </div>
+            {% if lesson.description %}
+                <p style="margin:.75rem 0 0; font-size:.9rem;">{{ lesson.description }}</p>
+            {% endif %}
+            {% if lesson.homework %}
+                <div style="margin-top:.75rem; padding:.75rem; background:#f4f6fb; border-radius:6px; font-size:.875rem;">
+                    <strong>Домашнее задание:</strong><br>{{ lesson.homework }}
+                </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="muted">Занятий пока нет.</p>
+    {% endif %}
+</div>
+{% endblock %}
