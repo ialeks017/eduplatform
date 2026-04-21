@@ -27,6 +27,7 @@
         <nav>
             <a href="{% url 'home' %}">Главная</a>
             {% if user.is_authenticated %}
+                <a href="{% url 'courses:group_list' %}">Группы</a>
                 <a href="{% url 'profile' %}">Профиль</a>
                 <form action="{% url 'logout' %}" method="post" class="logout-form">
                     {% csrf_token %}

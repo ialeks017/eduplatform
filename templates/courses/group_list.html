@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Учебные группы | EduPlatform{% endblock %}
+{% block content %}
+<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h1 style="margin:0;">Учебные группы</h1>
+        {% if user.role == "teacher" %}
+            <a class="btn" href="{% url 'courses:group_create' %}">+ Создать группу</a>
+        {% endif %}
+    </div>
+
+    {% if groups %}
+        <ul style="list-style:none; padding:0; margin:0;">
+        {% for group in groups %}
+            <li style="border-bottom:1px solid #eef0f6; padding:.75rem 0;">
+                <a href="{% url 'courses:group_detail' group.pk %}" style="font-weight:600; color:#3659a2; text-decoration:none;">
+                    {{ group.name }}
+                </a>
+                {% if group.description %}
+                    <span class="muted" style="margin-left:.5rem;">— {{ group.description|truncatechars:60 }}</span>
+                {% endif %}
+                <span class="muted" style="float:right; font-size:.875rem;">
+                    {{ group.students.count }} уч.
+                </span>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p class="muted">
+            {% if user.role == "teacher" %}
+                У вас пока нет групп. Создайте первую!
+            {% else %}
+                Вы не записаны ни в одну группу.
+            {% endif %}
+        </p>
+    {% endif %}
+</div>
+{% endblock %}

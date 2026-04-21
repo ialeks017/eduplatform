@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Создать группу | EduPlatform{% endblock %}
+{% block content %}
+<div class="card">
+    <a href="{% url 'courses:group_list' %}" class="muted" style="font-size:.875rem; text-decoration:none;">← Мои группы</a>
+    <h1 style="margin:.5rem 0 1.25rem;">Новая учебная группа</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div style="margin-bottom:1rem;">
+                <label style="display:block; font-weight:600; margin-bottom:.35rem;">
+                    {{ field.label }}{% if field.field.required %} *{% endif %}
+                </label>
+                {{ field }}
+                {% if field.errors %}
+                    {% for error in field.errors %}
+                        <span style="color:#c0392b; font-size:.8rem;">{{ error }}</span>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        {% endfor %}
+        <button type="submit" style="margin-top:.5rem;">Создать группу</button>
+    </form>
+</div>
+{% endblock %}
