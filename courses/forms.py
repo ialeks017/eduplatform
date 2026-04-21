@@ -7,11 +7,13 @@ from .models import Lesson, StudyGroup
 class StudyGroupForm(forms.ModelForm):
     class Meta:
         model = StudyGroup
-        fields = ["name", "description", "students"]
+        fields = ["name", "description", "teachers", "students"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         User = get_user_model()
+        self.fields["teachers"].queryset = User.objects.filter(role="teacher")
+        self.fields["teachers"].required = False
         self.fields["students"].queryset = User.objects.filter(role="student")
         self.fields["students"].required = False
 

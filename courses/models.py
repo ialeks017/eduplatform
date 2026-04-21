@@ -4,12 +4,12 @@ from django.db import models
 
 class StudyGroup(models.Model):
     name = models.CharField(max_length=200, verbose_name="Название группы")
-    teacher = models.ForeignKey(
+    teachers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
         related_name="taught_groups",
         limit_choices_to={"role": "teacher"},
-        verbose_name="Преподаватель",
+        blank=True,
+        verbose_name="Преподаватели",
     )
     students = models.ManyToManyField(
         settings.AUTH_USER_MODEL,

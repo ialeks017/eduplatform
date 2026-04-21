@@ -3,7 +3,7 @@ from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DetailView, ListView
 
 from .forms import LessonForm, StudyGroupForm
-from .mixins import GroupTeacherMixin, TeacherRequiredMixin
+from .mixins import AdminOrTeacherMixin, GroupTeacherMixin
 from .models import Lesson, StudyGroup
 
 
@@ -14,8 +14,10 @@ class GroupListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
+        if user.role == "admin":
+            return StudyGroup.objects.all()
         if user.role == "teacher":
-            return StudyGroup.objects.filter(teacher=user)
+            return StudyGroup.objects.filter(teachers=user)
         if user.role == "student":
             return StudyGroup.objects.filter(students=user)
         return StudyGroup.objects.none()
@@ -28,22 +30,27 @@ class GroupDetailView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         user = self.request.user
+        if user.role == "admin":
+            return StudyGroup.objects.all()
         if user.role == "teacher":
-            return StudyGroup.objects.filter(teacher=user)
+            return StudyGroup.objects.filter(teachers=user)
         if user.role == "student":
             return StudyGroup.objects.filter(students=user)
         return StudyGroup.objects.none()
 
 
-class GroupCreateView(TeacherRequiredMixin, CreateView):
+class GroupCreateView(AdminOrTeacherMixin, CreateView):
     model = StudyGroup
     form_class = StudyGroupForm
     template_name = "courses/group_form.html"
     success_url = reverse_lazy("courses:group_list")
 
     def form_valid(self, form):
-        form.instance.teacher = self.request.user
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        # Преподаватель, создавший группу, автоматически добавляется в неё
+        if self.request.user.role == "teacher":
+            self.object.teachers.add(self.request.user)
+        return response
 
 
 class LessonCreateView(GroupTeacherMixin, CreateView):

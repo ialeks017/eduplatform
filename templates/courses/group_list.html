@@ -4,7 +4,7 @@
 <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <h1 style="margin:0;">Учебные группы</h1>
-        {% if user.role == "teacher" %}
+        {% if user.role == "admin" or user.role == "teacher" %}
             <a class="btn" href="{% url 'courses:group_create' %}">+ Создать группу</a>
         {% endif %}
     </div>
