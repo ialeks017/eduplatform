@@ -1,9 +1,9 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DetailView, ListView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from .forms import LessonForm, StudyGroupForm
-from .mixins import AdminOrTeacherMixin, GroupTeacherMixin
+from .mixins import AdminOrTeacherMixin, GroupTeacherMixin, LessonOwnerMixin
 from .models import Lesson, StudyGroup
 
 
@@ -68,4 +68,32 @@ class LessonCreateView(GroupTeacherMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["group"] = self.get_group()
+        return context
+
+
+class LessonUpdateView(LessonOwnerMixin, UpdateView):
+    model = Lesson
+    form_class = LessonForm
+    template_name = "courses/lesson_form.html"
+
+    def get_success_url(self):
+        return reverse("courses:group_detail", kwargs={"pk": self.get_lesson().group.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["group"] = self.get_lesson().group
+        context["editing"] = True
+        return context
+
+
+class LessonDeleteView(LessonOwnerMixin, DeleteView):
+    model = Lesson
+    template_name = "courses/lesson_confirm_delete.html"
+
+    def get_success_url(self):
+        return reverse("courses:group_detail", kwargs={"pk": self.get_lesson().group.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["group"] = self.get_lesson().group
         return context
