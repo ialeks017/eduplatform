@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Удалить занятие | EduPlatform{% endblock %}
 {% block content %}
-<div class="card">
-    <a href="{% url 'courses:group_detail' group.pk %}" class="muted" style="font-size:.875rem; text-decoration:none;">← {{ group.name }}</a>
-    <h1 style="margin:.5rem 0 1rem;">Удалить занятие?</h1>
+<div class="card" style="max-width: 480px;">
+    <a href="{% url 'courses:group_detail' group.pk %}" class="back-link">← {{ group.name }}</a>
+    <h1>Удалить занятие?</h1>
     <p>Вы уверены, что хотите удалить занятие <strong>{{ object.get_subject_display }}</strong> из группы <strong>{{ group.name }}</strong>?</p>
-    <p class="muted" style="font-size:.875rem;">Это действие необратимо.</p>
-    <form method="post" style="display:flex; gap:.75rem; margin-top:1.5rem;">
+    <p class="muted" style="font-size: .875rem;">Это действие необратимо.</p>
+    <form method="post" style="display: flex; gap: .75rem; margin-top: 1.25rem;">
         {% csrf_token %}
-        <button type="submit" style="background:#c0392b;">Удалить</button>
-        <a href="{% url 'courses:group_detail' group.pk %}" class="btn" style="background:#5b6787;">Отмена</a>
+        <button type="submit" class="btn-danger">Удалить</button>
+        <a href="{% url 'courses:group_detail' group.pk %}" class="btn btn-secondary">Отмена</a>
     </form>
 </div>
 {% endblock %}

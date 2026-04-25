@@ -2,15 +2,15 @@
 {% block title %}Статистика | EduPlatform{% endblock %}
 {% block content %}
 <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.75rem;">
-        <h1 style="margin:0;">Статистика занятий</h1>
-        <a class="btn" href="{% url 'courses:group_list' %}">← К группам</a>
+    <div class="page-header">
+        <h1>Статистика занятий</h1>
+        <a class="btn btn-secondary" href="{% url 'courses:group_list' %}">← К группам</a>
     </div>
 
-    <form method="get" style="margin:1rem 0 1.5rem 0; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:.75rem; align-items:end;">
-        <div>
+    <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .75rem; align-items: end; margin-bottom: 1.5rem;">
+        <div class="form-group" style="margin: 0;">
             <label for="teacher">Преподаватель</label>
-            <select id="teacher" name="teacher" style="width:100%; padding:.6rem; border:1px solid #ccd4e2; border-radius:8px;">
+            <select id="teacher" name="teacher">
                 <option value="">Все преподаватели</option>
                 {% for teacher in teachers %}
                     <option value="{{ teacher.id }}" {% if selected_teacher == teacher.id|stringformat:"s" %}selected{% endif %}>
@@ -19,60 +19,57 @@
                 {% endfor %}
             </select>
         </div>
-        <div>
+        <div class="form-group" style="margin: 0;">
             <label for="start_date">Дата от</label>
             <input id="start_date" name="start_date" type="date" value="{{ start_date }}">
         </div>
-        <div>
+        <div class="form-group" style="margin: 0;">
             <label for="end_date">Дата до</label>
             <input id="end_date" name="end_date" type="date" value="{{ end_date }}">
         </div>
         <div>
-            <button type="submit" style="width:100%;">Показать</button>
+            <button type="submit" style="width: 100%;">Показать</button>
         </div>
     </form>
 
     {% if date_error %}
-        <p style="color:#b23636; margin-top:-.25rem;">Некорректный формат даты. Используйте встроенный календарь поля даты.</p>
+        <p class="field-error" style="margin: -.75rem 0 1rem;">Некорректный формат даты. Используйте встроенный календарь.</p>
     {% endif %}
 
-    <div style="background:#f7f9ff; border:1px solid #dce4f5; border-radius:10px; padding:1rem; margin-bottom:1.25rem;">
-        <h2 style="margin:.2rem 0 1rem 0; font-size:1.15rem;">Сводно за выбранный период</h2>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:.75rem;">
-            <div>
-                <div class="muted">Количество занятий</div>
-                <strong>{{ overall.lessons_count }}</strong>
-            </div>
-            <div>
-                <div class="muted">Общая длительность</div>
-                <strong>{{ overall.total_duration }} мин</strong>
-            </div>
-            <div>
-                <div class="muted">Суммарная стоимость</div>
-                <strong>{{ overall.total_cost }} ₽</strong>
-            </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .75rem; margin-bottom: 1.5rem;">
+        <div style="background: var(--primary-light); border-radius: var(--radius-sm); padding: 1rem; border: 1px solid #c8d4f5;">
+            <div class="muted" style="font-size: .8rem; margin-bottom: .35rem;">Количество занятий</div>
+            <div style="font-size: 1.75rem; font-weight: 700; color: var(--primary); line-height: 1;">{{ overall.lessons_count }}</div>
+        </div>
+        <div style="background: #edfaf3; border-radius: var(--radius-sm); padding: 1rem; border: 1px solid #b8e8d0;">
+            <div class="muted" style="font-size: .8rem; margin-bottom: .35rem;">Общая длительность</div>
+            <div style="font-size: 1.75rem; font-weight: 700; color: #1a7a4a; line-height: 1;">{{ overall.total_duration }}<span style="font-size: .9rem; font-weight: 500; margin-left: .25rem;">мин</span></div>
+        </div>
+        <div style="background: #fff8ec; border-radius: var(--radius-sm); padding: 1rem; border: 1px solid #f5dfa0;">
+            <div class="muted" style="font-size: .8rem; margin-bottom: .35rem;">Суммарная стоимость</div>
+            <div style="font-size: 1.75rem; font-weight: 700; color: #a05f00; line-height: 1;">{{ overall.total_cost }}<span style="font-size: .9rem; font-weight: 500; margin-left: .25rem;">₽</span></div>
         </div>
     </div>
 
-    <h2 style="margin:.25rem 0 .8rem 0; font-size:1.1rem;">Разбивка по преподавателям</h2>
+    <h2>Разбивка по преподавателям</h2>
     {% if teacher_stats %}
-        <div style="overflow:auto;">
-            <table style="width:100%; border-collapse:collapse; min-width:560px;">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; min-width: 520px; font-size: .9rem;">
                 <thead>
-                    <tr style="background:#f1f4fb; text-align:left;">
-                        <th style="padding:.6rem; border-bottom:1px solid #e1e6f2;">Преподаватель</th>
-                        <th style="padding:.6rem; border-bottom:1px solid #e1e6f2;">Занятий</th>
-                        <th style="padding:.6rem; border-bottom:1px solid #e1e6f2;">Длительность (мин)</th>
-                        <th style="padding:.6rem; border-bottom:1px solid #e1e6f2;">Сумма (₽)</th>
+                    <tr style="background: var(--bg);">
+                        <th style="padding: .65rem .75rem; text-align: left; border-bottom: 2px solid var(--border); font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em;">Преподаватель</th>
+                        <th style="padding: .65rem .75rem; text-align: right; border-bottom: 2px solid var(--border); font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em;">Занятий</th>
+                        <th style="padding: .65rem .75rem; text-align: right; border-bottom: 2px solid var(--border); font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em;">Длительность</th>
+                        <th style="padding: .65rem .75rem; text-align: right; border-bottom: 2px solid var(--border); font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em;">Сумма</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for row in teacher_stats %}
-                        <tr>
-                            <td style="padding:.55rem .6rem; border-bottom:1px solid #eef1f8;">{{ row.get_full_name|default:row.username }}</td>
-                            <td style="padding:.55rem .6rem; border-bottom:1px solid #eef1f8;">{{ row.lessons_count }}</td>
-                            <td style="padding:.55rem .6rem; border-bottom:1px solid #eef1f8;">{{ row.total_duration }}</td>
-                            <td style="padding:.55rem .6rem; border-bottom:1px solid #eef1f8;">{{ row.total_cost }}</td>
+                        <tr style="{% cycle 'background: var(--bg);' 'background: #fff;' %}">
+                            <td style="padding: .6rem .75rem; border-bottom: 1px solid var(--border-light);">{{ row.get_full_name|default:row.username }}</td>
+                            <td style="padding: .6rem .75rem; border-bottom: 1px solid var(--border-light); text-align: right; font-weight: 600;">{{ row.lessons_count }}</td>
+                            <td style="padding: .6rem .75rem; border-bottom: 1px solid var(--border-light); text-align: right;">{{ row.total_duration }} мин</td>
+                            <td style="padding: .6rem .75rem; border-bottom: 1px solid var(--border-light); text-align: right;">{{ row.total_cost }} ₽</td>
                         </tr>
                     {% endfor %}
                 </tbody>

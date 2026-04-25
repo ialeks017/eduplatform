@@ -3,13 +3,29 @@
 {% block title %}Регистрация | EduPlatform{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h1>Регистрация пользователя</h1>
+<div class="card" style="max-width: 480px; margin: 0 auto;">
+    <h1 style="margin-bottom: .25rem;">Регистрация</h1>
+    <p class="muted" style="margin: 0 0 1.5rem; font-size: .9rem;">Создайте аккаунт для доступа к платформе</p>
+
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Зарегистрироваться</button>
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <div class="field-help">{{ field.help_text }}</div>
+                {% endif %}
+                {% for error in field.errors %}
+                    <span class="field-error">{{ error }}</span>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        <button type="submit" style="width: 100%; margin-top: .25rem;">Зарегистрироваться</button>
     </form>
-    <p class="muted">Уже есть аккаунт? <a href="{% url 'login' %}">Войдите</a>.</p>
+
+    <p class="muted" style="text-align: center; margin: 1.25rem 0 0; font-size: .875rem;">
+        Уже есть аккаунт? <a href="{% url 'login' %}" style="color: var(--primary);">Войдите</a>
+    </p>
 </div>
 {% endblock %}

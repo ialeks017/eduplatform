@@ -3,14 +3,47 @@
 {% block title %}Главная | EduPlatform{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h1>Добро пожаловать в EduPlatform</h1>
-    <p class="muted">Платформа для обучения с ролями для учеников, преподавателей и администраторов.</p>
+<div class="card" style="padding: 2.5rem 2rem; text-align: center; background: linear-gradient(135deg, #1e3163 0%, #3659a2 100%); color: #fff; margin-bottom: 1.5rem;">
+    <div style="font-size: 3rem; margin-bottom: .75rem;">📚</div>
+    <h1 style="color: #fff; font-size: 2rem; margin-bottom: .5rem;">Добро пожаловать в EduPlatform</h1>
+    <p style="color: rgba(255,255,255,.8); font-size: 1.05rem; max-width: 520px; margin: 0 auto 1.5rem;">
+        Платформа для обучения с ролями для учеников, преподавателей и администраторов.
+    </p>
     {% if user.is_authenticated %}
-        <p>Вы вошли как <strong>{{ user.username }}</strong>.</p>
-        <a class="btn" href="{% url 'profile' %}">Перейти в профиль</a>
+        <p style="color: rgba(255,255,255,.7); margin-bottom: 1rem;">
+            Вы вошли как <strong style="color: #fff;">{{ user.username }}</strong>
+            <span class="pill pill-primary" style="margin-left: .5rem; background: rgba(255,255,255,.2); color: #fff;">{{ user.get_role_display }}</span>
+        </p>
+        <a class="btn" href="{% url 'courses:group_list' %}" style="background: #fff; color: var(--primary); font-weight: 700;">
+            Перейти к группам →
+        </a>
     {% else %}
-        <a class="btn" href="{% url 'signup' %}">Создать аккаунт</a>
+        <div style="display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap;">
+            <a class="btn" href="{% url 'signup' %}" style="background: #fff; color: var(--primary); font-weight: 700;">
+                Создать аккаунт
+            </a>
+            <a class="btn btn-secondary" href="{% url 'login' %}" style="border-color: rgba(255,255,255,.4); color: #fff;">
+                Войти
+            </a>
+        </div>
     {% endif %}
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+    <div class="card" style="text-align: center; padding: 1.5rem;">
+        <div style="font-size: 2rem; margin-bottom: .5rem;">🎓</div>
+        <h2 style="margin-bottom: .25rem;">Ученики</h2>
+        <p class="muted" style="font-size: .875rem; margin: 0;">Доступ к урокам и материалам своих групп</p>
+    </div>
+    <div class="card" style="text-align: center; padding: 1.5rem;">
+        <div style="font-size: 2rem; margin-bottom: .5rem;">👩‍🏫</div>
+        <h2 style="margin-bottom: .25rem;">Преподаватели</h2>
+        <p class="muted" style="font-size: .875rem; margin: 0;">Управление занятиями и видеоматериалами</p>
+    </div>
+    <div class="card" style="text-align: center; padding: 1.5rem;">
+        <div style="font-size: 2rem; margin-bottom: .5rem;">🛠️</div>
+        <h2 style="margin-bottom: .25rem;">Администраторы</h2>
+        <p class="muted" style="font-size: .875rem; margin: 0;">Полный контроль и статистика платформы</p>
+    </div>
 </div>
 {% endblock %}

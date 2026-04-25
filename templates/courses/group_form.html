@@ -1,25 +1,27 @@
 {% extends "base.html" %}
-{% block title %}Создать группу | EduPlatform{% endblock %}
+{% block title %}{% if form.instance.pk %}Редактировать группу{% else %}Создать группу{% endif %} | EduPlatform{% endblock %}
 {% block content %}
-<div class="card">
-    <a href="{% url 'courses:group_list' %}" class="muted" style="font-size:.875rem; text-decoration:none;">← Мои группы</a>
-    <h1 style="margin:.5rem 0 1.25rem;">Новая учебная группа</h1>
+<div class="card" style="max-width: 560px;">
+    <a href="{% url 'courses:group_list' %}" class="back-link">← Мои группы</a>
+    <h1>{% if form.instance.pk %}Редактировать группу{% else %}Новая учебная группа{% endif %}</h1>
     <form method="post">
         {% csrf_token %}
         {% for field in form %}
-            <div style="margin-bottom:1rem;">
-                <label style="display:block; font-weight:600; margin-bottom:.35rem;">
-                    {{ field.label }}{% if field.field.required %} *{% endif %}
-                </label>
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} *{% endif %}</label>
                 {{ field }}
-                {% if field.errors %}
-                    {% for error in field.errors %}
-                        <span style="color:#c0392b; font-size:.8rem;">{{ error }}</span>
-                    {% endfor %}
+                {% if field.help_text %}
+                    <div class="field-help">{{ field.help_text }}</div>
                 {% endif %}
+                {% for error in field.errors %}
+                    <span class="field-error">{{ error }}</span>
+                {% endfor %}
             </div>
         {% endfor %}
-        <button type="submit" style="margin-top:.5rem;">Создать группу</button>
+        <div style="display: flex; gap: .75rem; margin-top: .5rem;">
+            <button type="submit">{% if form.instance.pk %}Сохранить изменения{% else %}Создать группу{% endif %}</button>
+            <a href="{% url 'courses:group_list' %}" class="btn btn-secondary">Отмена</a>
+        </div>
     </form>
 </div>
 {% endblock %}

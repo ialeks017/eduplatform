@@ -3,13 +3,33 @@
 {% block title %}Вход | EduPlatform{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h1>Вход в систему</h1>
+<div class="card" style="max-width: 420px; margin: 0 auto;">
+    <h1 style="margin-bottom: .25rem;">Вход в систему</h1>
+    <p class="muted" style="margin: 0 0 1.5rem; font-size: .9rem;">Введите свои данные для входа</p>
+
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Войти</button>
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% for error in field.errors %}
+                    <span class="field-error">{{ error }}</span>
+                {% endfor %}
+            </div>
+        {% endfor %}
+        {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+                <p class="field-error" style="margin-bottom: .75rem;">{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+        <button type="submit" style="width: 100%; margin-top: .25rem;">Войти</button>
     </form>
-    <p class="muted"><a href="{% url 'password_reset' %}">Забыли пароль?</a></p>
+
+    <p class="muted" style="text-align: center; margin: 1.25rem 0 0; font-size: .875rem;">
+        <a href="{% url 'password_reset' %}" style="color: var(--primary);">Забыли пароль?</a>
+        &nbsp;·&nbsp;
+        <a href="{% url 'signup' %}" style="color: var(--primary);">Создать аккаунт</a>
+    </p>
 </div>
 {% endblock %}
