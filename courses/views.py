@@ -50,17 +50,20 @@ class GroupDetailView(LoginRequiredMixin, DetailView):
 
         lessons = self.object.lessons.all()
         if search_query:
+            matched_subject_codes = [
+                code
+                for code, label in Lesson.Subject.choices
+                if search_query.casefold() in code.casefold()
+                or search_query.casefold() in label.casefold()
+            ]
             lessons = lessons.filter(
                 Q(subject__icontains=search_query)
                 | Q(description__icontains=search_query)
                 | Q(homework__icontains=search_query)
+                | Q(subject__in=matched_subject_codes)
             )
 
         video_lessons = self.object.video_lessons.all()
-        if search_query:
-            video_lessons = video_lessons.filter(
-                Q(title__icontains=search_query) | Q(description__icontains=search_query)
-            )
 
         context["content_type"] = content_type
         context["search_query"] = search_query
