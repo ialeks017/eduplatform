@@ -8,4 +8,16 @@ from .models import User
 class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (("Роль", {"fields": ("role",)}),)
     add_fieldsets = UserAdmin.add_fieldsets + (("Роль", {"fields": ("role",)}),)
-    list_display = ("username", "email", "first_name", "last_name", "role", "is_staff")
+    list_display = (
+        "username",
+        "email",
+        "first_name",
+        "last_name",
+        "role",
+        "is_staff",
+        "is_active",
+        "date_joined",
+    )
+    list_filter = UserAdmin.list_filter + ("role",)
+    search_fields = ("username", "email", "first_name", "last_name")
+    ordering = ("-date_joined",)
