@@ -8,9 +8,9 @@
     </div>
 
     <form method="get" style="margin:1rem 0 1.5rem 0; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:.75rem; align-items:end;">
-        <div style="max-width:280px;">
+        <div>
             <label for="teacher">Преподаватель</label>
-            <select id="teacher" name="teacher" style="width:100%; padding:.55rem .6rem; border:1px solid #ccd4e2; border-radius:8px; font-size:.95rem;">
+            <select id="teacher" name="teacher">
                 <option value="">Все преподаватели</option>
                 {% for teacher in teachers %}
                     <option value="{{ teacher.id }}" {% if selected_teacher == teacher.id|stringformat:"s" %}selected{% endif %}>
