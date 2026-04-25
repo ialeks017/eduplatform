@@ -15,6 +15,16 @@ class AdminOrTeacherMixin(LoginRequiredMixin):
         return response
 
 
+class AdminOnlyMixin(LoginRequiredMixin):
+    """Разрешает доступ только администраторам."""
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if request.user.is_authenticated and request.user.role != "admin":
+            raise PermissionDenied
+        return response
+
+
 class GroupTeacherMixin(AdminOrTeacherMixin):
     """Администратор имеет полный доступ; преподаватель — только к своим группам."""
 

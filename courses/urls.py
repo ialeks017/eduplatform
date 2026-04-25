@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    AdminStatisticsView,
     GroupCreateView,
     GroupDetailView,
     GroupListView,
@@ -14,6 +15,7 @@ app_name = "courses"
 
 urlpatterns = [
     path("groups/", GroupListView.as_view(), name="group_list"),
+    path("statistics/", AdminStatisticsView.as_view(), name="statistics"),
     path("groups/new/", GroupCreateView.as_view(), name="group_create"),
     path("groups/<int:pk>/", GroupDetailView.as_view(), name="group_detail"),
     path("groups/<int:pk>/lessons/new/", LessonCreateView.as_view(), name="lesson_create"),
