@@ -1,4 +1,5 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
@@ -40,7 +41,33 @@ class GroupDetailView(LoginRequiredMixin, DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["video_lessons"] = self.object.video_lessons.all()
+
+        content_type = self.request.GET.get("content_type", "lessons")
+        if content_type not in {"lessons", "video_lessons"}:
+            content_type = "lessons"
+
+        search_query = self.request.GET.get("q", "").strip()
+
+        lessons = self.object.lessons.all()
+        if search_query:
+            lessons = lessons.filter(
+                Q(subject__icontains=search_query)
+                | Q(description__icontains=search_query)
+                | Q(homework__icontains=search_query)
+            )
+
+        video_lessons = self.object.video_lessons.all()
+        if search_query:
+            video_lessons = video_lessons.filter(
+                Q(title__icontains=search_query) | Q(description__icontains=search_query)
+            )
+
+        context["content_type"] = content_type
+        context["search_query"] = search_query
+        context["lessons"] = lessons
+        context["video_lessons"] = video_lessons
+        context["lessons_count"] = self.object.lessons.count()
+        context["video_lessons_count"] = self.object.video_lessons.count()
         return context
 
 
