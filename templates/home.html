@@ -3,14 +3,20 @@
 {% block title %}Главная | EduPlatform{% endblock %}
 
 {% block content %}
-<div class="card">
-    <h1>Добро пожаловать в EduPlatform</h1>
-    <p class="muted">Платформа для обучения с ролями для учеников, преподавателей и администраторов.</p>
+<div class="card stack-sm">
+    <h1 style="margin:0;">Добро пожаловать в EduPlatform</h1>
+    <p class="muted" style="margin:0;">Платформа для обучения с ролями для учеников, преподавателей и администраторов.</p>
     {% if user.is_authenticated %}
-        <p>Вы вошли как <strong>{{ user.username }}</strong>.</p>
-        <a class="btn" href="{% url 'profile' %}">Перейти в профиль</a>
+        <p style="margin:0;">Вы вошли как <strong>{{ user.username }}</strong>.</p>
+        <div>
+            <a class="btn" href="{% url 'profile' %}">Перейти в профиль</a>
+            <a class="btn btn-secondary" href="{% url 'courses:group_list' %}">Открыть группы</a>
+        </div>
     {% else %}
-        <a class="btn" href="{% url 'signup' %}">Создать аккаунт</a>
+        <div>
+            <a class="btn" href="{% url 'signup' %}">Создать аккаунт</a>
+            <a class="btn btn-secondary" href="{% url 'login' %}">У меня уже есть аккаунт</a>
+        </div>
     {% endif %}
 </div>
 {% endblock %}

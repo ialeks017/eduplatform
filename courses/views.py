@@ -18,12 +18,13 @@ class GroupListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
+        base = StudyGroup.objects.prefetch_related("students")
         if user.role == "admin":
-            return StudyGroup.objects.all()
+            return base
         if user.role == "teacher":
-            return StudyGroup.objects.filter(teachers=user)
+            return base.filter(teachers=user)
         if user.role == "student":
-            return StudyGroup.objects.filter(students=user)
+            return base.filter(students=user)
         return StudyGroup.objects.none()
 
 
@@ -34,12 +35,18 @@ class GroupDetailView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         user = self.request.user
+        base = StudyGroup.objects.prefetch_related(
+            "students",
+            "teachers",
+            "lessons",
+            "video_lessons",
+        )
         if user.role == "admin":
-            return StudyGroup.objects.all()
+            return base
         if user.role == "teacher":
-            return StudyGroup.objects.filter(teachers=user)
+            return base.filter(teachers=user)
         if user.role == "student":
-            return StudyGroup.objects.filter(students=user)
+            return base.filter(students=user)
         return StudyGroup.objects.none()
 
     def get_context_data(self, **kwargs):
@@ -67,6 +74,11 @@ class GroupDetailView(LoginRequiredMixin, DetailView):
             )
 
         video_lessons = self.object.video_lessons.all()
+        if search_query:
+            video_lessons = video_lessons.filter(
+                Q(title__icontains=search_query)
+                | Q(description__icontains=search_query)
+            )
 
         context["content_type"] = content_type
         context["search_query"] = search_query
