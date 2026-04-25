@@ -23,9 +23,12 @@
 <div class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
         <h2 style="margin:0;">Занятия</h2>
-        {% if user.role == "admin" or group.teachers.all|length and user in group.teachers.all %}
-            <a class="btn" href="{% url 'courses:lesson_create' group.pk %}">+ Добавить занятие</a>
-        {% endif %}
+        <div style="display:flex; gap:.5rem;">
+            {% if user.role == "admin" or group.teachers.all|length and user in group.teachers.all %}
+                <a class="btn" href="{% url 'courses:lesson_create' group.pk %}">+ Добавить занятие</a>
+                <a class="btn btn-secondary" href="{% url 'courses:video_lesson_create' %}">+ Загрузить видеоурок</a>
+            {% endif %}
+        </div>
     </div>
 
     {% if group.lessons.all %}
@@ -57,6 +60,27 @@
         {% endfor %}
     {% else %}
         <p class="muted">Занятий пока нет.</p>
+    {% endif %}
+</div>
+
+<div class="card" style="margin-top:1rem;">
+    <h2 style="margin:0 0 1rem;">Видеоуроки</h2>
+    {% if video_lessons %}
+        {% for video in video_lessons %}
+        <div style="border:1px solid #eef0f6; border-radius:8px; padding:1rem; margin-bottom:.75rem;">
+            <strong>{{ video.title }}</strong>
+            <div class="muted" style="font-size:.875rem; margin-top:.2rem;">{{ video.created_at|date:"d.m.Y H:i" }}</div>
+            {% if video.description %}
+                <p style="margin:.6rem 0;">{{ video.description }}</p>
+            {% endif %}
+            <video controls style="width:100%; max-width:720px; border-radius:6px; background:#000;">
+                <source src="{{ video.video_file.url }}">
+                Ваш браузер не поддерживает воспроизведение видео.
+            </video>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="muted">Видеоуроков пока нет.</p>
     {% endif %}
 </div>
 {% endblock %}

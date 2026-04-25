@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Lesson, StudyGroup
+from .models import Lesson, StudyGroup, VideoLesson
 
 
 class LessonInline(admin.TabularInline):
@@ -20,3 +20,9 @@ class StudyGroupAdmin(admin.ModelAdmin):
 class LessonAdmin(admin.ModelAdmin):
     list_display = ["__str__", "group", "subject", "duration_minutes", "cost", "created_at"]
     list_filter = ["subject", "group"]
+
+
+@admin.register(VideoLesson)
+class VideoLessonAdmin(admin.ModelAdmin):
+    list_display = ["title", "uploaded_by", "created_at"]
+    filter_horizontal = ["groups"]

@@ -2,9 +2,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from .forms import LessonForm, StudyGroupForm
+from .forms import LessonForm, StudyGroupForm, VideoLessonForm
 from .mixins import AdminOrTeacherMixin, GroupTeacherMixin, LessonOwnerMixin
-from .models import Lesson, StudyGroup
+from .models import Lesson, StudyGroup, VideoLesson
 
 
 class GroupListView(LoginRequiredMixin, ListView):
@@ -37,6 +37,11 @@ class GroupDetailView(LoginRequiredMixin, DetailView):
         if user.role == "student":
             return StudyGroup.objects.filter(students=user)
         return StudyGroup.objects.none()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["video_lessons"] = self.object.video_lessons.all()
+        return context
 
 
 class GroupCreateView(AdminOrTeacherMixin, CreateView):
@@ -97,3 +102,19 @@ class LessonDeleteView(LessonOwnerMixin, DeleteView):
         context = super().get_context_data(**kwargs)
         context["group"] = self.get_lesson().group
         return context
+
+
+class VideoLessonCreateView(AdminOrTeacherMixin, CreateView):
+    model = VideoLesson
+    form_class = VideoLessonForm
+    template_name = "courses/video_lesson_form.html"
+    success_url = reverse_lazy("courses:group_list")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
+    def form_valid(self, form):
+        form.instance.uploaded_by = self.request.user
+        return super().form_valid(form)
