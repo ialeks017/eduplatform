@@ -5,19 +5,282 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}EduPlatform{% endblock %}</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; background: #f4f6fb; color: #1a1f36; }
-        header { background: #243b6b; color: #fff; padding: 1rem 2rem; }
-        .header-inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-        .brand { color: #fff; text-decoration: none; font-weight: 700; font-size: 1.1rem; white-space: nowrap; }
-        nav { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
-        nav a, nav button { color: #fff; text-decoration: none; background: transparent; border: none; cursor: pointer; font-size: 1rem; padding: 0; line-height: 1.2; }
-        .logout-form { margin: 0; display: flex; align-items: center; }
-        main { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
-        .card { background: #fff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 6px 18px rgba(0,0,0,.06); }
-        form p { margin-bottom: 1rem; }
-        input { width: 100%; padding: .6rem; border: 1px solid #ccd4e2; border-radius: 8px; }
-        button, .btn { background: #3659a2; color: #fff; border: none; border-radius: 8px; padding: .7rem 1rem; text-decoration: none; display: inline-block; }
-        .muted { color: #5b6787; }
+        :root {
+            --bg: #f4f6fb;
+            --surface: #ffffff;
+            --surface-muted: #f7f9fc;
+            --text: #1a1f36;
+            --muted: #5b6787;
+            --primary: #3659a2;
+            --primary-700: #29498f;
+            --border: #dce2f0;
+            --danger: #c0392b;
+            --shadow: 0 10px 28px rgba(26, 31, 54, 0.08);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: "Inter", "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(180deg, #f5f7fd 0%, #eef2fb 100%);
+            color: var(--text);
+            line-height: 1.45;
+        }
+
+        a { color: var(--primary); }
+
+        header {
+            background: linear-gradient(120deg, #243b6b, #2f4f8e);
+            color: #fff;
+            padding: 1rem 1.2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .header-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .brand {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            letter-spacing: .2px;
+            font-size: 1.15rem;
+            white-space: nowrap;
+        }
+
+        nav {
+            display: flex;
+            gap: .6rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        nav a,
+        nav button {
+            color: #fff;
+            text-decoration: none;
+            background: transparent;
+            border: 1px solid transparent;
+            cursor: pointer;
+            font-size: .95rem;
+            padding: .45rem .65rem;
+            line-height: 1.2;
+            border-radius: 8px;
+            transition: .2s ease;
+        }
+
+        nav a:hover,
+        nav button:hover {
+            background: rgba(255, 255, 255, 0.13);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .logout-form {
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        main {
+            max-width: 980px;
+            margin: 1.8rem auto 2.2rem;
+            padding: 0 1rem;
+        }
+
+        h1, h2, h3 { line-height: 1.2; }
+
+        .card {
+            background: var(--surface);
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            padding: 1.35rem;
+            box-shadow: var(--shadow);
+        }
+
+        .card + .card { margin-top: 1rem; }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: .8rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .stack-sm > * + * { margin-top: .6rem; }
+
+        .muted { color: var(--muted); }
+
+        .back-link {
+            font-size: .9rem;
+            text-decoration: none;
+            color: var(--muted);
+        }
+
+        form p { margin: 0 0 .9rem; }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: .62rem .72rem;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            background: #fff;
+            color: var(--text);
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #93a8db;
+            box-shadow: 0 0 0 3px rgba(54, 89, 162, .14);
+        }
+
+        button,
+        .btn {
+            background: var(--primary);
+            color: #fff;
+            border: 1px solid transparent;
+            border-radius: 9px;
+            padding: .62rem .95rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .35rem;
+            font-size: .94rem;
+            line-height: 1.2;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+
+        button:hover,
+        .btn:hover { background: var(--primary-700); }
+
+        .btn-secondary {
+            background: #fff;
+            color: var(--primary);
+            border-color: var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #f6f8fd;
+            color: var(--primary-700);
+        }
+
+        .btn-danger {
+            background: #fff;
+            color: var(--danger);
+            border-color: #efc4c0;
+        }
+
+        .pill-row { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+        .pill {
+            font-size: .88rem;
+            text-decoration: none;
+            padding: .38rem .74rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .pill.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #f2f6ff;
+            font-weight: 600;
+        }
+
+        .list-reset {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .group-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: .5rem;
+            align-items: center;
+            border-bottom: 1px solid #edf1f9;
+            padding: .82rem 0;
+        }
+
+        .group-item:last-child { border-bottom: 0; }
+
+        .group-title {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .95rem;
+            color: var(--muted);
+            font-size: .89rem;
+        }
+
+        .lesson-card {
+            border: 1px solid #e8edf8;
+            border-radius: 10px;
+            padding: .95rem;
+            background: var(--surface);
+        }
+
+        .lesson-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: .6rem;
+            flex-wrap: wrap;
+        }
+
+        .actions-inline { display: flex; align-items: center; gap: .45rem; flex-wrap: wrap; }
+
+        .note {
+            margin-top: .75rem;
+            padding: .72rem;
+            background: var(--surface-muted);
+            border: 1px solid #e7ebf5;
+            border-radius: 8px;
+            font-size: .9rem;
+        }
+
+        .search-row {
+            display: flex;
+            gap: .5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-row .search-input { flex: 1; min-width: 220px; }
+
+        .video-box {
+            width: 100%;
+            max-width: 720px;
+            border-radius: 8px;
+            background: #000;
+        }
+
+        @media (max-width: 640px) {
+            .card { padding: 1rem; }
+            .group-item { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>

@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block title %}{{ group.name }} | EduPlatform{% endblock %}
 {% block content %}
-<div class="card" style="margin-bottom:1rem;">
-    <a href="{% url 'courses:group_list' %}" class="muted" style="font-size:.875rem; text-decoration:none;">← Все группы</a>
-    <h1 style="margin:.5rem 0 .25rem;">{{ group.name }}</h1>
+<div class="card stack-sm">
+    <a href="{% url 'courses:group_list' %}" class="back-link">← Все группы</a>
+    <h1 style="margin:.2rem 0;">{{ group.name }}</h1>
 
-    <div style="margin-bottom:.75rem;">
-        <span class="muted" style="font-size:.875rem;">Преподаватели:</span>
+    <div>
+        <span class="muted">Преподаватели:</span>
         {% for teacher in group.teachers.all %}
             <strong>{{ teacher }}</strong>{% if not forloop.last %}, {% endif %}
         {% empty %}
@@ -15,47 +15,47 @@
     </div>
 
     {% if group.description %}
-        <p style="margin:0 0 .75rem;">{{ group.description }}</p>
+        <p style="margin:0;">{{ group.description }}</p>
     {% endif %}
-    <p class="muted" style="font-size:.875rem; margin:0;">Учеников: {{ group.students.count }}</p>
+    <p class="muted" style="margin:0;">Учеников: {{ group.students.count }}</p>
 </div>
 
 <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; gap:1rem; flex-wrap:wrap;">
+    <div class="page-header">
         <div>
             <h2 style="margin:0 0 .75rem;">Материалы группы</h2>
-            <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+            <div class="pill-row">
                 <a
                     href="?content_type=lessons{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
-                    style="font-size:.875rem; text-decoration:none; padding:.35rem .7rem; border-radius:999px; border:1px solid {% if content_type == 'lessons' %}#3659a2{% else %}#d6dbe8{% endif %}; color:{% if content_type == 'lessons' %}#3659a2{% else %}#5b6787{% endif %}; font-weight:{% if content_type == 'lessons' %}600{% else %}500{% endif %};"
+                    class="pill {% if content_type == 'lessons' %}active{% endif %}"
                 >
                     Уроки ({{ lessons_count }})
                 </a>
                 <a
                     href="?content_type=video_lessons{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
-                    style="font-size:.875rem; text-decoration:none; padding:.35rem .7rem; border-radius:999px; border:1px solid {% if content_type == 'video_lessons' %}#3659a2{% else %}#d6dbe8{% endif %}; color:{% if content_type == 'video_lessons' %}#3659a2{% else %}#5b6787{% endif %}; font-weight:{% if content_type == 'video_lessons' %}600{% else %}500{% endif %};"
+                    class="pill {% if content_type == 'video_lessons' %}active{% endif %}"
                 >
                     Видеоуроки ({{ video_lessons_count }})
                 </a>
             </div>
         </div>
 
-        <div style="display:flex; gap:.5rem;">
-            {% if user.role == "admin" or group.teachers.all|length and user in group.teachers.all %}
+        <div class="actions-inline">
+            {% if user.role == "admin" or user in group.teachers.all %}
                 <a class="btn" href="{% url 'courses:lesson_create' group.pk %}">+ Добавить занятие</a>
                 <a class="btn btn-secondary" href="{% url 'courses:video_lesson_create' %}">+ Загрузить видеоурок</a>
             {% endif %}
         </div>
     </div>
 
-    <form method="get" style="display:flex; gap:.5rem; margin-bottom:1rem; flex-wrap:wrap;">
+    <form method="get" class="search-row">
         <input type="hidden" name="content_type" value="{{ content_type }}">
         <input
             type="text"
             name="q"
             value="{{ search_query }}"
             placeholder="Поиск по урокам"
-            style="flex:1; min-width:220px; padding:.55rem .7rem; border:1px solid #d6dbe8; border-radius:6px;"
+            class="search-input"
         >
         <button type="submit" class="btn">Найти</button>
         {% if search_query %}
@@ -65,32 +65,34 @@
 
     {% if content_type == "lessons" %}
         {% if lessons %}
+            <div class="stack-sm">
             {% for lesson in lessons %}
-            <div style="border:1px solid #eef0f6; border-radius:8px; padding:1rem; margin-bottom:.75rem;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                    <strong style="font-size:1rem;">{{ lesson.get_subject_display }}</strong>
-                    <div style="display:flex; gap:.5rem; align-items:center;">
-                        <span class="muted" style="font-size:.875rem;">{{ lesson.created_at|date:"d.m.Y" }}</span>
-                        {% if user.role == "admin" or user in group.teachers.all %}
-                            <a href="{% url 'courses:lesson_edit' lesson.pk %}" style="font-size:.8rem; color:#3659a2; text-decoration:none; padding:.2rem .5rem; border:1px solid #3659a2; border-radius:4px;">Ред.</a>
-                            <a href="{% url 'courses:lesson_delete' lesson.pk %}" style="font-size:.8rem; color:#c0392b; text-decoration:none; padding:.2rem .5rem; border:1px solid #c0392b; border-radius:4px;">Удалить</a>
-                        {% endif %}
+                <div class="lesson-card">
+                    <div class="lesson-head">
+                        <strong>{{ lesson.get_subject_display }}</strong>
+                        <div class="actions-inline">
+                            <span class="muted">{{ lesson.created_at|date:"d.m.Y" }}</span>
+                            {% if user.role == "admin" or user in group.teachers.all %}
+                                <a href="{% url 'courses:lesson_edit' lesson.pk %}" class="btn btn-secondary">Ред.</a>
+                                <a href="{% url 'courses:lesson_delete' lesson.pk %}" class="btn btn-danger">Удалить</a>
+                            {% endif %}
+                        </div>
                     </div>
-                </div>
-                <div style="margin-top:.5rem; display:flex; gap:1.5rem; font-size:.875rem; color:#5b6787;">
-                    <span>⏱ {{ lesson.duration_minutes }} мин</span>
-                    <span>💰 {{ lesson.cost }} руб</span>
-                </div>
-                {% if lesson.description %}
-                    <p style="margin:.75rem 0 0; font-size:.9rem;">{{ lesson.description }}</p>
-                {% endif %}
-                {% if lesson.homework %}
-                    <div style="margin-top:.75rem; padding:.75rem; background:#f4f6fb; border-radius:6px; font-size:.875rem;">
-                        <strong>Домашнее задание:</strong><br>{{ lesson.homework }}
+                    <div class="meta">
+                        <span>⏱ {{ lesson.duration_minutes }} мин</span>
+                        <span>💰 {{ lesson.cost }} руб</span>
                     </div>
-                {% endif %}
-            </div>
+                    {% if lesson.description %}
+                        <p style="margin:.65rem 0 0;">{{ lesson.description }}</p>
+                    {% endif %}
+                    {% if lesson.homework %}
+                        <div class="note">
+                            <strong>Домашнее задание:</strong><br>{{ lesson.homework }}
+                        </div>
+                    {% endif %}
+                </div>
             {% endfor %}
+            </div>
         {% else %}
             <p class="muted">
                 {% if search_query %}
@@ -102,19 +104,21 @@
         {% endif %}
     {% else %}
         {% if video_lessons %}
+            <div class="stack-sm">
             {% for video in video_lessons %}
-            <div style="border:1px solid #eef0f6; border-radius:8px; padding:1rem; margin-bottom:.75rem;">
-                <strong>{{ video.title }}</strong>
-                <div class="muted" style="font-size:.875rem; margin-top:.2rem;">{{ video.created_at|date:"d.m.Y H:i" }}</div>
-                {% if video.description %}
-                    <p style="margin:.6rem 0;">{{ video.description }}</p>
-                {% endif %}
-                <video controls style="width:100%; max-width:720px; border-radius:6px; background:#000;">
-                    <source src="{{ video.video_file.url }}">
-                    Ваш браузер не поддерживает воспроизведение видео.
-                </video>
-            </div>
+                <div class="lesson-card">
+                    <strong>{{ video.title }}</strong>
+                    <div class="muted" style="font-size:.9rem; margin-top:.2rem;">{{ video.created_at|date:"d.m.Y H:i" }}</div>
+                    {% if video.description %}
+                        <p style="margin:.65rem 0;">{{ video.description }}</p>
+                    {% endif %}
+                    <video controls class="video-box">
+                        <source src="{{ video.video_file.url }}">
+                        Ваш браузер не поддерживает воспроизведение видео.
+                    </video>
+                </div>
             {% endfor %}
+            </div>
         {% else %}
             <p class="muted">
                 {% if search_query %}
