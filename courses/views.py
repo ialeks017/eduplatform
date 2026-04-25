@@ -1,10 +1,13 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q
+from django.contrib.auth import get_user_model
+from django.db.models import Count, DecimalField, Q, Sum, Value
+from django.db.models.functions import Coalesce
+from django.utils.dateparse import parse_date
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
 
 from .forms import LessonForm, StudyGroupForm, VideoLessonForm
-from .mixins import AdminOrTeacherMixin, GroupTeacherMixin, LessonOwnerMixin
+from .mixins import AdminOnlyMixin, AdminOrTeacherMixin, GroupTeacherMixin, LessonOwnerMixin
 from .models import Lesson, StudyGroup, VideoLesson
 
 
@@ -148,3 +151,73 @@ class VideoLessonCreateView(AdminOrTeacherMixin, CreateView):
     def form_valid(self, form):
         form.instance.uploaded_by = self.request.user
         return super().form_valid(form)
+
+
+class AdminStatisticsView(AdminOnlyMixin, TemplateView):
+    template_name = "courses/admin_statistics.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user_model = get_user_model()
+        teachers = user_model.objects.filter(role=user_model.Role.TEACHER).order_by(
+            "last_name",
+            "first_name",
+            "username",
+        )
+
+        selected_teacher = self.request.GET.get("teacher", "").strip()
+        start_date_raw = self.request.GET.get("start_date", "").strip()
+        end_date_raw = self.request.GET.get("end_date", "").strip()
+
+        start_date = parse_date(start_date_raw) if start_date_raw else None
+        end_date = parse_date(end_date_raw) if end_date_raw else None
+        date_error = bool((start_date_raw and start_date is None) or (end_date_raw and end_date is None))
+
+        lessons = Lesson.objects.all()
+        lesson_filter = Q()
+        if start_date:
+            lessons = lessons.filter(created_at__date__gte=start_date)
+            lesson_filter &= Q(taught_groups__lessons__created_at__date__gte=start_date)
+        if end_date:
+            lessons = lessons.filter(created_at__date__lte=end_date)
+            lesson_filter &= Q(taught_groups__lessons__created_at__date__lte=end_date)
+        if selected_teacher:
+            lessons = lessons.filter(group__teachers__id=selected_teacher)
+
+        money_field = DecimalField(max_digits=10, decimal_places=2)
+        teacher_stats = teachers.annotate(
+            lessons_count=Count("taught_groups__lessons", filter=lesson_filter, distinct=True),
+            total_duration=Coalesce(
+                Sum("taught_groups__lessons__duration_minutes", filter=lesson_filter),
+                Value(0),
+            ),
+            total_cost=Coalesce(
+                Sum("taught_groups__lessons__cost", filter=lesson_filter, output_field=money_field),
+                Value(0),
+                output_field=money_field,
+            ),
+        )
+
+        if selected_teacher:
+            teacher_stats = teacher_stats.filter(id=selected_teacher)
+
+        overall = lessons.aggregate(
+            lessons_count=Count("id"),
+            total_duration=Coalesce(Sum("duration_minutes"), Value(0)),
+            total_cost=Coalesce(
+                Sum("cost", output_field=money_field),
+                Value(0),
+                output_field=money_field,
+            ),
+        )
+
+        context.update({
+            "teachers": teachers,
+            "teacher_stats": teacher_stats,
+            "selected_teacher": selected_teacher,
+            "start_date": start_date_raw,
+            "end_date": end_date_raw,
+            "date_error": date_error,
+            "overall": overall,
+        })
+        return context
