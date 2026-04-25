@@ -60,3 +60,31 @@ class Lesson(models.Model):
 
     def __str__(self) -> str:
         return f"{self.get_subject_display()} — {self.group.name}"
+
+
+class VideoLesson(models.Model):
+    title = models.CharField(max_length=255, verbose_name="Название видеоурока")
+    description = models.TextField(blank=True, verbose_name="Описание")
+    video_file = models.FileField(upload_to="lesson_videos/%Y/%m/%d", verbose_name="Видео файл")
+    groups = models.ManyToManyField(
+        StudyGroup,
+        related_name="video_lessons",
+        verbose_name="Доступные группы",
+    )
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="uploaded_videos",
+        verbose_name="Загрузил",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Загружен")
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Видеоурок"
+        verbose_name_plural = "Видеоуроки"
+
+    def __str__(self) -> str:
+        return self.title
