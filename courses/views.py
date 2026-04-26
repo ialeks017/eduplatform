@@ -9,7 +9,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, T
 
 from .forms import LessonForm, StudyGroupForm, VideoLessonForm
 from .mixins import AdminOnlyMixin, AdminOrTeacherMixin, GroupTeacherMixin, LessonOwnerMixin
-from .models import Lesson, StudyGroup, VideoLesson
+from .models import Lesson, LessonAttachment, StudyGroup, VideoLesson
 
 
 class GroupListView(LoginRequiredMixin, ListView):
@@ -54,6 +54,7 @@ class GroupDetailView(LoginRequiredMixin, DetailView):
             "students",
             "teachers",
             "lessons",
+            "lessons__attachments",
             "video_lessons",
         )
         if user.role == "admin":
@@ -133,7 +134,13 @@ class LessonCreateView(GroupTeacherMixin, CreateView):
 
     def form_valid(self, form):
         form.instance.group = self.get_group()
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        self._save_attachments(self.object)
+        return response
+
+    def _save_attachments(self, lesson):
+        for attachment in self.request.FILES.getlist("attachments"):
+            LessonAttachment.objects.create(lesson=lesson, file=attachment)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -153,7 +160,17 @@ class LessonUpdateView(LessonOwnerMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         context["group"] = self.get_lesson().group
         context["editing"] = True
+        context["existing_attachments"] = self.get_lesson().attachments.all()
         return context
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        delete_ids = self.request.POST.getlist("delete_attachments")
+        if delete_ids:
+            self.object.attachments.filter(id__in=delete_ids).delete()
+        for attachment in self.request.FILES.getlist("attachments"):
+            LessonAttachment.objects.create(lesson=self.object, file=attachment)
+        return response
 
 
 class LessonDeleteView(LessonOwnerMixin, DeleteView):

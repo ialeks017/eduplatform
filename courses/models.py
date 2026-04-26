@@ -73,6 +73,25 @@ class Lesson(models.Model):
         return f"{self.get_subject_display()} — {self.group.name}"
 
 
+class LessonAttachment(models.Model):
+    lesson = models.ForeignKey(
+        Lesson,
+        on_delete=models.CASCADE,
+        related_name="attachments",
+        verbose_name="Урок",
+    )
+    file = models.FileField(upload_to="lesson_attachments/%Y/%m/%d", verbose_name="Файл")
+    uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name="Загружен")
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+        verbose_name = "Файл урока"
+        verbose_name_plural = "Файлы уроков"
+
+    def __str__(self) -> str:
+        return self.file.name.rsplit("/", maxsplit=1)[-1]
+
+
 class VideoLesson(models.Model):
     title = models.CharField(max_length=255, verbose_name="Название видеоурока")
     description = models.TextField(blank=True, verbose_name="Описание")

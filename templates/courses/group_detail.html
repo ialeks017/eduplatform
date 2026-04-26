@@ -103,6 +103,18 @@
                             <strong>Домашнее задание:</strong><br>{{ lesson.homework }}
                         </div>
                     {% endif %}
+                    {% if lesson.attachments.all %}
+                        <div class="note" style="margin-top:.65rem;">
+                            <strong>Файлы урока:</strong>
+                            <ul style="margin:.4rem 0 0; padding-left:1.1rem;">
+                                {% for attachment in lesson.attachments.all %}
+                                    <li>
+                                        <a href="{{ attachment.file.url }}" target="_blank" rel="noopener">{{ attachment }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
                 </div>
             {% endfor %}
             </div>
