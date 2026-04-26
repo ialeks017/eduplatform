@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Удаление расписания | EduPlatform{% endblock %}
+{% block content %}
+<div class="card stack-sm">
+    <a href="{% url 'courses:group_detail' group.pk %}" class="back-link">← {{ group.name }}</a>
+    <h1 style="margin:.25rem 0;">Удалить еженедельное занятие?</h1>
+    <p class="muted" style="margin:0;">
+        {{ object.get_subject_display }} — {{ object.get_weekday_display }} в {{ object.starts_at|time:"H:i" }}
+    </p>
+    <p class="muted" style="margin:0;">
+        После удаления новые занятия по этому расписанию создаваться не будут.
+    </p>
+    <form method="post" class="actions-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Удалить расписание</button>
+        <a href="{% url 'courses:group_detail' group.pk %}" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>
+{% endblock %}
