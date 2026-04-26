@@ -37,12 +37,19 @@
                 >
                     Видеоуроки ({{ video_lessons_count }})
                 </a>
+                <a
+                    href="?content_type=plans{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+                    class="pill {% if content_type == 'plans' %}active{% endif %}"
+                >
+                    Расписание ({{ plans_count }})
+                </a>
             </div>
         </div>
 
         <div class="actions-inline">
             {% if user.role == "admin" or user in group.teachers.all %}
                 <a class="btn" href="{% url 'courses:lesson_create' group.pk %}">+ Добавить занятие</a>
+                <a class="btn btn-secondary" href="{% url 'courses:plan_create' group.pk %}">+ Еженедельное расписание</a>
                 <a class="btn btn-secondary" href="{% url 'courses:video_lesson_create' %}">+ Загрузить видеоурок</a>
             {% endif %}
         </div>
@@ -79,7 +86,13 @@
                     <div class="lesson-head">
                         <strong>{{ lesson.get_subject_display }}</strong>
                         <div class="actions-inline">
-                            <span class="muted">{{ lesson.created_at|date:"d.m.Y" }}</span>
+                            <span class="muted">
+                                {% if lesson.scheduled_for %}
+                                    {{ lesson.scheduled_for|date:"d.m.Y H:i" }}
+                                {% else %}
+                                    {{ lesson.created_at|date:"d.m.Y" }}
+                                {% endif %}
+                            </span>
                             {% if user.role == "admin" or user in group.teachers.all %}
                                 <a href="{% url 'courses:lesson_edit' lesson.pk %}" class="btn btn-secondary">Ред.</a>
                                 <form method="post" action="{% url 'courses:lesson_duplicate' lesson.pk %}" style="display:inline;">
@@ -127,7 +140,7 @@
                 {% endif %}
             </p>
         {% endif %}
-    {% else %}
+    {% elif content_type == "video_lessons" %}
         {% if video_lessons %}
             <div class="stack-sm">
             {% for video in video_lessons %}
@@ -152,6 +165,27 @@
                     Видеоуроков пока нет.
                 {% endif %}
             </p>
+        {% endif %}
+    {% else %}
+        {% if plans %}
+            <div class="stack-sm">
+            {% for plan in plans %}
+                <div class="lesson-card">
+                    <div class="lesson-head">
+                        <strong>{{ plan.get_subject_display }}</strong>
+                        <span class="muted">{{ plan.get_weekday_display }} в {{ plan.starts_at|time:"H:i" }}</span>
+                    </div>
+                    <div class="meta">
+                        <span>📅 c {{ plan.start_date|date:"d.m.Y" }}{% if plan.end_date %} по {{ plan.end_date|date:"d.m.Y" }}{% endif %}</span>
+                        <span>⏱ {{ plan.duration_minutes }} мин</span>
+                        <span>💰 {{ plan.cost }} руб</span>
+                        <span>📌 {% if plan.is_active %}активно{% else %}не активно{% endif %}</span>
+                    </div>
+                </div>
+            {% endfor %}
+            </div>
+        {% else %}
+            <p class="muted">Еженедельное расписание пока не добавлено.</p>
         {% endif %}
     {% endif %}
 </div>

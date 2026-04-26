@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Календарь занятий | EduPlatform{% endblock %}
+{% block content %}
+<div class="card stack-sm">
+    <div class="page-header">
+        <h1 style="margin:0;">Календарь занятий</h1>
+    </div>
+    <p class="muted" style="margin:0;">
+        {% if user.role == "teacher" %}
+            Вы видите занятия всех своих групп.
+        {% elif user.role == "student" %}
+            Вы видите только свои занятия.
+        {% else %}
+            Вы видите занятия всех групп.
+        {% endif %}
+    </p>
+
+    <form method="get" class="search-row">
+        <input type="date" name="start" value="{{ start|date:'Y-m-d' }}">
+        <input type="date" name="end" value="{{ end|date:'Y-m-d' }}">
+        <button type="submit" class="btn">Показать</button>
+    </form>
+
+    <div class="note">
+        Групп в видимости: {{ groups.count }}
+    </div>
+
+    {% if lessons %}
+        <div class="stack-sm">
+            {% for lesson in lessons %}
+                <div class="lesson-card">
+                    <div class="lesson-head">
+                        <strong>{{ lesson.get_subject_display }} — {{ lesson.group.name }}</strong>
+                        <span class="muted">{{ lesson.scheduled_for|date:"d.m.Y H:i" }}</span>
+                    </div>
+                    <div class="meta">
+                        <span>📌 {{ lesson.get_status_display }}</span>
+                        <span>⏱ {{ lesson.duration_minutes }} мин</span>
+                        <span>💰 {{ lesson.cost }} руб</span>
+                    </div>
+                    {% if lesson.status == "draft" and user.role != "student" %}
+                        <div class="note">Черновик готов к заполнению и публикации. <a href="{% url 'courses:lesson_edit' lesson.pk %}">Открыть</a></div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="muted">В выбранном диапазоне занятий нет.</p>
+    {% endif %}
+</div>
+{% endblock %}
