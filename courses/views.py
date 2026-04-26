@@ -2,9 +2,10 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import get_user_model
 from django.db.models import Count, DecimalField, Q, Sum, Value
 from django.db.models.functions import Coalesce
+from django.shortcuts import redirect
 from django.utils.dateparse import parse_date
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView, View
 
 from .forms import LessonForm, StudyGroupForm, VideoLessonForm
 from .mixins import AdminOnlyMixin, AdminOrTeacherMixin, GroupTeacherMixin, LessonOwnerMixin
@@ -15,17 +16,31 @@ class GroupListView(LoginRequiredMixin, ListView):
     model = StudyGroup
     template_name = "courses/group_list.html"
     context_object_name = "groups"
+    paginate_by = 10
 
     def get_queryset(self):
         user = self.request.user
         base = StudyGroup.objects.prefetch_related("students")
         if user.role == "admin":
-            return base
-        if user.role == "teacher":
-            return base.filter(teachers=user)
-        if user.role == "student":
-            return base.filter(students=user)
-        return StudyGroup.objects.none()
+            queryset = base
+        elif user.role == "teacher":
+            queryset = base.filter(teachers=user)
+        elif user.role == "student":
+            queryset = base.filter(students=user)
+        else:
+            queryset = StudyGroup.objects.none()
+
+        search_query = self.request.GET.get("q", "").strip()
+        if search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=search_query) | Q(description__icontains=search_query)
+            )
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["search_query"] = self.request.GET.get("q", "").strip()
+        return context
 
 
 class GroupDetailView(LoginRequiredMixin, DetailView):
@@ -57,8 +72,11 @@ class GroupDetailView(LoginRequiredMixin, DetailView):
             content_type = "lessons"
 
         search_query = self.request.GET.get("q", "").strip()
+        status_filter = self.request.GET.get("status", "").strip()
 
         lessons = self.object.lessons.all()
+        if status_filter in Lesson.Status.values:
+            lessons = lessons.filter(status=status_filter)
         if search_query:
             matched_subject_codes = [
                 code
@@ -82,6 +100,8 @@ class GroupDetailView(LoginRequiredMixin, DetailView):
 
         context["content_type"] = content_type
         context["search_query"] = search_query
+        context["status_filter"] = status_filter
+        context["status_options"] = Lesson.Status.choices
         context["lessons"] = lessons
         context["video_lessons"] = video_lessons
         context["lessons_count"] = self.object.lessons.count()
@@ -147,6 +167,21 @@ class LessonDeleteView(LessonOwnerMixin, DeleteView):
         context = super().get_context_data(**kwargs)
         context["group"] = self.get_lesson().group
         return context
+
+
+class LessonDuplicateView(LessonOwnerMixin, View):
+    def post(self, request, *args, **kwargs):
+        source_lesson = self.get_lesson()
+        Lesson.objects.create(
+            group=source_lesson.group,
+            subject=source_lesson.subject,
+            status=Lesson.Status.DRAFT,
+            duration_minutes=source_lesson.duration_minutes,
+            cost=source_lesson.cost,
+            description=source_lesson.description,
+            homework=source_lesson.homework,
+        )
+        return redirect("courses:group_detail", pk=source_lesson.group.pk)
 
 
 class VideoLessonCreateView(AdminOrTeacherMixin, CreateView):

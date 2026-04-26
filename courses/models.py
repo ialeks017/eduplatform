@@ -36,6 +36,11 @@ class Lesson(models.Model):
         MATH = "math", "Математика"
         CS = "cs", "Информатика"
 
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Черновик"
+        PUBLISHED = "published", "Опубликован"
+        ARCHIVED = "archived", "Архив"
+
     group = models.ForeignKey(
         StudyGroup,
         on_delete=models.CASCADE,
@@ -46,6 +51,12 @@ class Lesson(models.Model):
         max_length=20,
         choices=Subject.choices,
         verbose_name="Предмет",
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PUBLISHED,
+        verbose_name="Статус",
     )
     duration_minutes = models.PositiveIntegerField(verbose_name="Длительность (мин)")
     cost = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Стоимость (руб)")

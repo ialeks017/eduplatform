@@ -50,6 +50,14 @@
 
     <form method="get" class="search-row">
         <input type="hidden" name="content_type" value="{{ content_type }}">
+        {% if content_type == "lessons" %}
+            <select name="status">
+                <option value="">Все статусы</option>
+                {% for value, label in status_options %}
+                    <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        {% endif %}
         <input
             type="text"
             name="q"
@@ -74,11 +82,16 @@
                             <span class="muted">{{ lesson.created_at|date:"d.m.Y" }}</span>
                             {% if user.role == "admin" or user in group.teachers.all %}
                                 <a href="{% url 'courses:lesson_edit' lesson.pk %}" class="btn btn-secondary">Ред.</a>
+                                <form method="post" action="{% url 'courses:lesson_duplicate' lesson.pk %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-secondary">Копия</button>
+                                </form>
                                 <a href="{% url 'courses:lesson_delete' lesson.pk %}" class="btn btn-danger">Удалить</a>
                             {% endif %}
                         </div>
                     </div>
                     <div class="meta">
+                        <span>📌 {{ lesson.get_status_display }}</span>
                         <span>⏱ {{ lesson.duration_minutes }} мин</span>
                         <span>💰 {{ lesson.cost }} руб</span>
                     </div>

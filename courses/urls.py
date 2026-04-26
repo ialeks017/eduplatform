@@ -6,6 +6,7 @@ from .views import (
     GroupDetailView,
     GroupListView,
     LessonCreateView,
+    LessonDuplicateView,
     LessonDeleteView,
     LessonUpdateView,
     VideoLessonCreateView,
@@ -21,5 +22,6 @@ urlpatterns = [
     path("groups/<int:pk>/lessons/new/", LessonCreateView.as_view(), name="lesson_create"),
     path("videos/new/", VideoLessonCreateView.as_view(), name="video_lesson_create"),
     path("lessons/<int:pk>/edit/", LessonUpdateView.as_view(), name="lesson_edit"),
+    path("lessons/<int:pk>/duplicate/", LessonDuplicateView.as_view(), name="lesson_duplicate"),
     path("lessons/<int:pk>/delete/", LessonDeleteView.as_view(), name="lesson_delete"),
 ]
