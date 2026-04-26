@@ -3,7 +3,13 @@
 {% block content %}
 <div class="card">
     <a href="{% url 'courses:group_detail' group.pk %}" class="muted" style="font-size:.875rem; text-decoration:none;">← {{ group.name }}</a>
-    <h1 style="margin:.5rem 0 1.25rem;">Новое еженедельное занятие</h1>
+    <h1 style="margin:.5rem 0 1.25rem;">
+        {% if editing %}
+            Редактирование еженедельного занятия
+        {% else %}
+            Новое еженедельное занятие
+        {% endif %}
+    </h1>
     <form method="post">
         {% csrf_token %}
         {% for field in form %}
@@ -19,7 +25,7 @@
                 {% endif %}
             </div>
         {% endfor %}
-        <button type="submit">Создать расписание</button>
+        <button type="submit">{% if editing %}Сохранить изменения{% else %}Создать расписание{% endif %}</button>
     </form>
 </div>
 {% endblock %}

@@ -25,21 +25,49 @@
         Групп в видимости: {{ groups.count }}
     </div>
 
-    {% if lessons %}
+    {% if calendar_items %}
         <div class="stack-sm">
-            {% for lesson in lessons %}
+            {% for item in calendar_items %}
                 <div class="lesson-card">
-                    <div class="lesson-head">
-                        <strong>{{ lesson.get_subject_display }} — {{ lesson.group.name }}</strong>
-                        <span class="muted">{{ lesson.scheduled_for|date:"d.m.Y H:i" }}</span>
-                    </div>
-                    <div class="meta">
-                        <span>📌 {{ lesson.get_status_display }}</span>
-                        <span>⏱ {{ lesson.duration_minutes }} мин</span>
-                        <span>💰 {{ lesson.cost }} руб</span>
-                    </div>
-                    {% if lesson.status == "draft" and user.role != "student" %}
-                        <div class="note">Черновик готов к заполнению и публикации. <a href="{% url 'courses:lesson_edit' lesson.pk %}">Открыть</a></div>
+                    {% if item.type == "lesson" %}
+                        {% with lesson=item.lesson %}
+                            <div class="lesson-head">
+                                <strong>{{ lesson.get_subject_display }} — {{ lesson.group.name }}</strong>
+                                <div class="actions-inline">
+                                    <span class="muted">{{ lesson.scheduled_for|date:"d.m.Y H:i" }}</span>
+                                    {% if user.role != "student" %}
+                                        <a href="{% url 'courses:lesson_edit' lesson.pk %}" class="btn btn-secondary">Ред.</a>
+                                        <a href="{% url 'courses:lesson_delete' lesson.pk %}" class="btn btn-danger">Удалить</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="meta">
+                                <span>📌 {{ lesson.get_status_display }}</span>
+                                <span>⏱ {{ lesson.duration_minutes }} мин</span>
+                                <span>💰 {{ lesson.cost }} руб</span>
+                            </div>
+                            {% if lesson.status == "draft" and user.role != "student" %}
+                                <div class="note">Черновик готов к заполнению и публикации.</div>
+                            {% endif %}
+                        {% endwith %}
+                    {% else %}
+                        {% with plan=item.plan %}
+                            <div class="lesson-head">
+                                <strong>{{ plan.get_subject_display }} — {{ plan.group.name }}</strong>
+                                <div class="actions-inline">
+                                    <span class="muted">{{ item.scheduled_for|date:"d.m.Y H:i" }}</span>
+                                    {% if user.role != "student" %}
+                                        <a href="{% url 'courses:plan_edit' plan.pk %}" class="btn btn-secondary">Ред. расписание</a>
+                                        <a href="{% url 'courses:plan_delete' plan.pk %}" class="btn btn-danger">Удалить расписание</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="meta">
+                                <span>📅 По еженедельному расписанию</span>
+                                <span>⏱ {{ plan.duration_minutes }} мин</span>
+                                <span>💰 {{ plan.cost }} руб</span>
+                            </div>
+                        {% endwith %}
                     {% endif %}
                 </div>
             {% endfor %}

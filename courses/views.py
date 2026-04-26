@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
 from django.db.models import Count, DecimalField, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import redirect
@@ -270,6 +271,46 @@ class RecurringLessonPlanCreateView(GroupTeacherMixin, CreateView):
         return context
 
 
+class RecurringLessonPlanUpdateView(AdminOrTeacherMixin, UpdateView):
+    model = RecurringLessonPlan
+    form_class = RecurringLessonPlanForm
+    template_name = "courses/recurring_plan_form.html"
+
+    def get_object(self, queryset=None):
+        plan = super().get_object(queryset)
+        if self.request.user.role != "admin" and not plan.group.teachers.filter(pk=self.request.user.pk).exists():
+            raise PermissionDenied
+        return plan
+
+    def get_success_url(self):
+        return reverse("courses:group_detail", kwargs={"pk": self.object.group.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["group"] = self.object.group
+        context["editing"] = True
+        return context
+
+
+class RecurringLessonPlanDeleteView(AdminOrTeacherMixin, DeleteView):
+    model = RecurringLessonPlan
+    template_name = "courses/recurring_plan_confirm_delete.html"
+
+    def get_object(self, queryset=None):
+        plan = super().get_object(queryset)
+        if self.request.user.role != "admin" and not plan.group.teachers.filter(pk=self.request.user.pk).exists():
+            raise PermissionDenied
+        return plan
+
+    def get_success_url(self):
+        return reverse("courses:group_detail", kwargs={"pk": self.object.group.pk})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["group"] = self.object.group
+        return context
+
+
 class CalendarView(LoginRequiredMixin, TemplateView):
     template_name = "courses/calendar.html"
 
@@ -283,28 +324,73 @@ class CalendarView(LoginRequiredMixin, TemplateView):
         start_date = parse_date(start_raw) if start_raw else today - timedelta(days=today.weekday())
         end_date = parse_date(end_raw) if end_raw else start_date + timedelta(days=13)
 
-        lessons = Lesson.objects.select_related("group").order_by("scheduled_for", "created_at")
+        lessons = Lesson.objects.select_related("group", "source_plan").order_by("scheduled_for", "created_at")
         user = self.request.user
         if user.role == "teacher":
             lessons = lessons.filter(group__teachers=user)
-            groups = StudyGroup.objects.filter(teachers=user)
+            groups = StudyGroup.objects.filter(teachers=user).distinct()
+            plans = RecurringLessonPlan.objects.filter(group__teachers=user, is_active=True)
         elif user.role == "student":
             lessons = lessons.filter(group__students=user)
-            groups = StudyGroup.objects.filter(students=user)
+            groups = StudyGroup.objects.filter(students=user).distinct()
+            plans = RecurringLessonPlan.objects.filter(group__students=user, is_active=True)
         elif user.role == "admin":
             groups = StudyGroup.objects.all()
+            plans = RecurringLessonPlan.objects.filter(is_active=True)
         else:
             lessons = Lesson.objects.none()
             groups = StudyGroup.objects.none()
+            plans = RecurringLessonPlan.objects.none()
 
         if start_date:
             lessons = lessons.filter(scheduled_for__date__gte=start_date)
         if end_date:
             lessons = lessons.filter(scheduled_for__date__lte=end_date)
 
+        lessons = list(lessons)
+        existing_plan_slots = {
+            (lesson.source_plan_id, timezone.localtime(lesson.scheduled_for).date(), timezone.localtime(lesson.scheduled_for).time())
+            for lesson in lessons
+            if lesson.source_plan_id and lesson.scheduled_for
+        }
+
+        recurring_slots = []
+        if start_date and end_date:
+            for plan in plans.select_related("group"):
+                cursor = max(start_date, plan.start_date)
+                if plan.end_date:
+                    range_end = min(end_date, plan.end_date)
+                else:
+                    range_end = end_date
+                if cursor > range_end:
+                    continue
+
+                days_ahead = (plan.weekday - cursor.weekday()) % 7
+                cursor = cursor + timedelta(days=days_ahead)
+                while cursor <= range_end:
+                    slot_key = (plan.pk, cursor, plan.starts_at)
+                    if slot_key not in existing_plan_slots:
+                        recurring_slots.append(
+                            {
+                                "plan": plan,
+                                "scheduled_for": timezone.make_aware(datetime.combine(cursor, plan.starts_at)),
+                            }
+                        )
+                    cursor += timedelta(days=7)
+
+        calendar_items = [
+            {"type": "lesson", "scheduled_for": lesson.scheduled_for, "lesson": lesson}
+            for lesson in lessons
+        ]
+        calendar_items.extend(
+            {"type": "plan", "scheduled_for": slot["scheduled_for"], "plan": slot["plan"]}
+            for slot in recurring_slots
+        )
+        calendar_items.sort(key=lambda item: item["scheduled_for"] or timezone.now())
+
         context.update(
             {
-                "lessons": lessons,
+                "calendar_items": calendar_items,
                 "groups": groups,
                 "start": start_date,
                 "end": end_date,

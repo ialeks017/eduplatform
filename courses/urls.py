@@ -11,7 +11,9 @@ from .views import (
     LessonDuplicateView,
     LessonDeleteView,
     LessonUpdateView,
+    RecurringLessonPlanDeleteView,
     VideoLessonCreateView,
+    RecurringLessonPlanUpdateView,
 )
 
 app_name = "courses"
@@ -24,6 +26,8 @@ urlpatterns = [
     path("groups/<int:pk>/", GroupDetailView.as_view(), name="group_detail"),
     path("groups/<int:pk>/lessons/new/", LessonCreateView.as_view(), name="lesson_create"),
     path("groups/<int:pk>/plans/new/", RecurringLessonPlanCreateView.as_view(), name="plan_create"),
+    path("plans/<int:pk>/edit/", RecurringLessonPlanUpdateView.as_view(), name="plan_edit"),
+    path("plans/<int:pk>/delete/", RecurringLessonPlanDeleteView.as_view(), name="plan_delete"),
     path("videos/new/", VideoLessonCreateView.as_view(), name="video_lesson_create"),
     path("lessons/<int:pk>/edit/", LessonUpdateView.as_view(), name="lesson_edit"),
     path("lessons/<int:pk>/duplicate/", LessonDuplicateView.as_view(), name="lesson_duplicate"),
