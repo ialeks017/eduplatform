@@ -4,6 +4,10 @@ from django.contrib.auth import get_user_model
 from .models import Lesson, StudyGroup, VideoLesson
 
 
+class MultiFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
 class StudyGroupForm(forms.ModelForm):
     class Meta:
         model = StudyGroup
@@ -19,6 +23,13 @@ class StudyGroupForm(forms.ModelForm):
 
 
 class LessonForm(forms.ModelForm):
+    attachments = forms.FileField(
+        required=False,
+        widget=MultiFileInput(attrs={"multiple": True}),
+        label="Файлы урока",
+        help_text="Можно выбрать сразу несколько файлов",
+    )
+
     class Meta:
         model = Lesson
         fields = ["subject", "status", "duration_minutes", "cost", "description", "homework"]
