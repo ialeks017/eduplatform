@@ -30,6 +30,51 @@ class StudyGroup(models.Model):
         return self.name
 
 
+class RecurringLessonPlan(models.Model):
+    class Weekday(models.IntegerChoices):
+        MONDAY = 0, "Понедельник"
+        TUESDAY = 1, "Вторник"
+        WEDNESDAY = 2, "Среда"
+        THURSDAY = 3, "Четверг"
+        FRIDAY = 4, "Пятница"
+        SATURDAY = 5, "Суббота"
+        SUNDAY = 6, "Воскресенье"
+
+    group = models.ForeignKey(
+        StudyGroup,
+        on_delete=models.CASCADE,
+        related_name="recurring_plans",
+        verbose_name="Группа",
+    )
+    subject = models.CharField(max_length=20, choices=[("physics", "Физика"), ("math", "Математика"), ("cs", "Информатика")], verbose_name="Предмет")
+    weekday = models.PositiveSmallIntegerField(choices=Weekday.choices, verbose_name="День недели")
+    starts_at = models.TimeField(verbose_name="Время начала")
+    start_date = models.DateField(verbose_name="Дата начала расписания")
+    end_date = models.DateField(null=True, blank=True, verbose_name="Дата окончания")
+    duration_minutes = models.PositiveIntegerField(verbose_name="Длительность (мин)")
+    cost = models.DecimalField(max_digits=8, decimal_places=2, verbose_name="Стоимость (руб)")
+    description = models.TextField(blank=True, verbose_name="Описание урока")
+    homework = models.TextField(blank=True, verbose_name="Домашнее задание")
+    is_active = models.BooleanField(default=True, verbose_name="Активно")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_recurring_plans",
+        verbose_name="Создал",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создан")
+
+    class Meta:
+        ordering = ["weekday", "starts_at"]
+        verbose_name = "Шаблон еженедельного занятия"
+        verbose_name_plural = "Шаблоны еженедельных занятий"
+
+    def __str__(self) -> str:
+        return f"{self.group.name}: {self.get_subject_display()} ({self.get_weekday_display()} {self.starts_at:%H:%M})"
+
+
 class Lesson(models.Model):
     class Subject(models.TextChoices):
         PHYSICS = "physics", "Физика"
@@ -47,6 +92,15 @@ class Lesson(models.Model):
         related_name="lessons",
         verbose_name="Группа",
     )
+    source_plan = models.ForeignKey(
+        RecurringLessonPlan,
+        on_delete=models.SET_NULL,
+        related_name="generated_lessons",
+        null=True,
+        blank=True,
+        verbose_name="Шаблон расписания",
+    )
+    scheduled_for = models.DateTimeField(null=True, blank=True, verbose_name="Запланировано на")
     subject = models.CharField(
         max_length=20,
         choices=Subject.choices,
@@ -65,7 +119,7 @@ class Lesson(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создан")
 
     class Meta:
-        ordering = ["-created_at"]
+        ordering = ["-scheduled_for", "-created_at"]
         verbose_name = "Урок"
         verbose_name_plural = "Уроки"
 

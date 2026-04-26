@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Еженедельное расписание | EduPlatform{% endblock %}
+{% block content %}
+<div class="card">
+    <a href="{% url 'courses:group_detail' group.pk %}" class="muted" style="font-size:.875rem; text-decoration:none;">← {{ group.name }}</a>
+    <h1 style="margin:.5rem 0 1.25rem;">Новое еженедельное занятие</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div style="margin-bottom:1rem;">
+                <label style="display:block; font-weight:600; margin-bottom:.35rem;">
+                    {{ field.label }}{% if field.field.required %} *{% endif %}
+                </label>
+                {{ field }}
+                {% if field.errors %}
+                    {% for error in field.errors %}
+                        <span style="color:#c0392b; font-size:.8rem;">{{ error }}</span>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        {% endfor %}
+        <button type="submit">Создать расписание</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 
-from .models import Lesson, StudyGroup, VideoLesson
+from .models import Lesson, RecurringLessonPlan, StudyGroup, VideoLesson
 
 
 class MultiFileInput(forms.ClearableFileInput):
@@ -32,7 +32,32 @@ class LessonForm(forms.ModelForm):
 
     class Meta:
         model = Lesson
-        fields = ["subject", "status", "duration_minutes", "cost", "description", "homework"]
+        fields = ["subject", "scheduled_for", "status", "duration_minutes", "cost", "description", "homework"]
+        widgets = {
+            "scheduled_for": forms.DateTimeInput(attrs={"type": "datetime-local"}),
+        }
+
+
+class RecurringLessonPlanForm(forms.ModelForm):
+    class Meta:
+        model = RecurringLessonPlan
+        fields = [
+            "subject",
+            "weekday",
+            "starts_at",
+            "start_date",
+            "end_date",
+            "duration_minutes",
+            "cost",
+            "description",
+            "homework",
+            "is_active",
+        ]
+        widgets = {
+            "starts_at": forms.TimeInput(attrs={"type": "time"}),
+            "start_date": forms.DateInput(attrs={"type": "date"}),
+            "end_date": forms.DateInput(attrs={"type": "date"}),
+        }
 
 
 class VideoLessonForm(forms.ModelForm):

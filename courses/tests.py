@@ -1,8 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
+from datetime import timedelta
 
-from .models import Lesson, StudyGroup
+from .models import Lesson, RecurringLessonPlan, StudyGroup
 
 User = get_user_model()
 
@@ -138,3 +140,74 @@ class LessonEnhancementsTest(TestCase):
         self.assertEqual(duplicated.group, self.lesson.group)
         self.assertEqual(duplicated.subject, self.lesson.subject)
         self.assertEqual(duplicated.status, Lesson.Status.DRAFT)
+
+
+class CalendarAndRecurringTest(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            username="admin_calendar",
+            password="Str0ng!Pass",
+            role=User.Role.ADMIN,
+        )
+        self.teacher = User.objects.create_user(
+            username="teacher_calendar",
+            password="Str0ng!Pass",
+            role=User.Role.TEACHER,
+        )
+        self.student = User.objects.create_user(
+            username="student_calendar",
+            password="Str0ng!Pass",
+            role=User.Role.STUDENT,
+        )
+        self.group = StudyGroup.objects.create(name="Геометрия")
+        self.group.teachers.add(self.teacher)
+        self.group.students.add(self.student)
+
+    def test_teacher_sees_calendar_and_due_draft_is_created(self):
+        now = timezone.localtime()
+        plan = RecurringLessonPlan.objects.create(
+            group=self.group,
+            subject=Lesson.Subject.MATH,
+            weekday=now.weekday(),
+            starts_at=(now - timedelta(hours=1)).time().replace(second=0, microsecond=0),
+            start_date=now.date(),
+            duration_minutes=60,
+            cost=2500,
+            created_by=self.teacher,
+        )
+        self.client.force_login(self.teacher)
+        response = self.client.get(reverse("courses:calendar"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Календарь занятий")
+        self.assertTrue(
+            Lesson.objects.filter(source_plan=plan, status=Lesson.Status.DRAFT).exists()
+        )
+
+    def test_student_sees_only_own_lessons(self):
+        another_student = User.objects.create_user(
+            username="student_other",
+            password="Str0ng!Pass",
+            role=User.Role.STUDENT,
+        )
+        other_group = StudyGroup.objects.create(name="Физика")
+        other_group.students.add(another_student)
+        Lesson.objects.create(
+            group=self.group,
+            subject=Lesson.Subject.CS,
+            scheduled_for=timezone.now(),
+            duration_minutes=45,
+            cost=1000,
+        )
+        Lesson.objects.create(
+            group=other_group,
+            subject=Lesson.Subject.PHYSICS,
+            scheduled_for=timezone.now(),
+            duration_minutes=45,
+            cost=1000,
+        )
+
+        self.client.force_login(self.student)
+        response = self.client.get(reverse("courses:calendar"))
+        self.assertContains(response, "Геометрия")
+        self.assertNotContains(response, "Физика")

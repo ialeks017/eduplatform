@@ -1,15 +1,60 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
+from datetime import datetime, timedelta
+
 from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count, DecimalField, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import redirect
-from django.utils.dateparse import parse_date
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
+from django.utils.dateparse import parse_date
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView, View
 
-from .forms import LessonForm, StudyGroupForm, VideoLessonForm
+from .forms import LessonForm, RecurringLessonPlanForm, StudyGroupForm, VideoLessonForm
 from .mixins import AdminOnlyMixin, AdminOrTeacherMixin, GroupTeacherMixin, LessonOwnerMixin
-from .models import Lesson, LessonAttachment, StudyGroup, VideoLesson
+from .models import Lesson, LessonAttachment, RecurringLessonPlan, StudyGroup, VideoLesson
+
+
+def _create_due_draft_lessons_for_user(user):
+    if user.role not in ("admin", "teacher"):
+        return
+
+    now = timezone.localtime()
+    current_date = now.date()
+
+    plans = RecurringLessonPlan.objects.filter(is_active=True)
+    if user.role == "teacher":
+        plans = plans.filter(group__teachers=user)
+
+    for plan in plans.select_related("group"):
+        if plan.start_date > current_date:
+            continue
+
+        target_date = current_date
+        days_back = (current_date.weekday() - plan.weekday) % 7
+        target_date = current_date - timedelta(days=days_back)
+        if target_date < plan.start_date:
+            continue
+        if plan.end_date and target_date > plan.end_date:
+            continue
+
+        scheduled_dt = timezone.make_aware(datetime.combine(target_date, plan.starts_at))
+        if scheduled_dt > now:
+            continue
+
+        Lesson.objects.get_or_create(
+            source_plan=plan,
+            scheduled_for=scheduled_dt,
+            defaults={
+                "group": plan.group,
+                "subject": plan.subject,
+                "status": Lesson.Status.DRAFT,
+                "duration_minutes": plan.duration_minutes,
+                "cost": plan.cost,
+                "description": plan.description,
+                "homework": plan.homework,
+            },
+        )
 
 
 class GroupListView(LoginRequiredMixin, ListView):
@@ -56,6 +101,7 @@ class GroupDetailView(LoginRequiredMixin, DetailView):
             "lessons",
             "lessons__attachments",
             "video_lessons",
+            "recurring_plans",
         )
         if user.role == "admin":
             return base
@@ -69,7 +115,7 @@ class GroupDetailView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
 
         content_type = self.request.GET.get("content_type", "lessons")
-        if content_type not in {"lessons", "video_lessons"}:
+        if content_type not in {"lessons", "video_lessons", "plans"}:
             content_type = "lessons"
 
         search_query = self.request.GET.get("q", "").strip()
@@ -99,14 +145,18 @@ class GroupDetailView(LoginRequiredMixin, DetailView):
                 | Q(description__icontains=search_query)
             )
 
+        plans = self.object.recurring_plans.all()
+
         context["content_type"] = content_type
         context["search_query"] = search_query
         context["status_filter"] = status_filter
         context["status_options"] = Lesson.Status.choices
         context["lessons"] = lessons
         context["video_lessons"] = video_lessons
+        context["plans"] = plans
         context["lessons_count"] = self.object.lessons.count()
         context["video_lessons_count"] = self.object.video_lessons.count()
+        context["plans_count"] = self.object.recurring_plans.count()
         return context
 
 
@@ -118,7 +168,6 @@ class GroupCreateView(AdminOrTeacherMixin, CreateView):
 
     def form_valid(self, form):
         response = super().form_valid(form)
-        # Преподаватель, создавший группу, автоматически добавляется в неё
         if self.request.user.role == "teacher":
             self.object.teachers.add(self.request.user)
         return response
@@ -192,6 +241,7 @@ class LessonDuplicateView(LessonOwnerMixin, View):
         Lesson.objects.create(
             group=source_lesson.group,
             subject=source_lesson.subject,
+            scheduled_for=source_lesson.scheduled_for,
             status=Lesson.Status.DRAFT,
             duration_minutes=source_lesson.duration_minutes,
             cost=source_lesson.cost,
@@ -199,6 +249,68 @@ class LessonDuplicateView(LessonOwnerMixin, View):
             homework=source_lesson.homework,
         )
         return redirect("courses:group_detail", pk=source_lesson.group.pk)
+
+
+class RecurringLessonPlanCreateView(GroupTeacherMixin, CreateView):
+    model = RecurringLessonPlan
+    form_class = RecurringLessonPlanForm
+    template_name = "courses/recurring_plan_form.html"
+
+    def get_success_url(self):
+        return reverse("courses:group_detail", kwargs={"pk": self.kwargs["pk"]})
+
+    def form_valid(self, form):
+        form.instance.group = self.get_group()
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["group"] = self.get_group()
+        return context
+
+
+class CalendarView(LoginRequiredMixin, TemplateView):
+    template_name = "courses/calendar.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        _create_due_draft_lessons_for_user(self.request.user)
+
+        start_raw = self.request.GET.get("start", "").strip()
+        end_raw = self.request.GET.get("end", "").strip()
+        today = timezone.localdate()
+        start_date = parse_date(start_raw) if start_raw else today - timedelta(days=today.weekday())
+        end_date = parse_date(end_raw) if end_raw else start_date + timedelta(days=13)
+
+        lessons = Lesson.objects.select_related("group").order_by("scheduled_for", "created_at")
+        user = self.request.user
+        if user.role == "teacher":
+            lessons = lessons.filter(group__teachers=user)
+            groups = StudyGroup.objects.filter(teachers=user)
+        elif user.role == "student":
+            lessons = lessons.filter(group__students=user)
+            groups = StudyGroup.objects.filter(students=user)
+        elif user.role == "admin":
+            groups = StudyGroup.objects.all()
+        else:
+            lessons = Lesson.objects.none()
+            groups = StudyGroup.objects.none()
+
+        if start_date:
+            lessons = lessons.filter(scheduled_for__date__gte=start_date)
+        if end_date:
+            lessons = lessons.filter(scheduled_for__date__lte=end_date)
+
+        context.update(
+            {
+                "lessons": lessons,
+                "groups": groups,
+                "start": start_date,
+                "end": end_date,
+            }
+        )
+        return context
 
 
 class VideoLessonCreateView(AdminOrTeacherMixin, CreateView):
