@@ -101,3 +101,40 @@ class NavigationStatisticsLinkTest(TestCase):
 
         response = self.client.get(reverse("home"))
         self.assertNotContains(response, reverse("courses:statistics"))
+
+
+class LessonEnhancementsTest(TestCase):
+    def setUp(self):
+        self.teacher = User.objects.create_user(
+            username="teacher_feature",
+            password="Str0ng!Pass",
+            role=User.Role.TEACHER,
+        )
+        self.group = StudyGroup.objects.create(name="Алгебра 8А", description="Базовый курс")
+        self.group.teachers.add(self.teacher)
+        self.lesson = Lesson.objects.create(
+            group=self.group,
+            subject=Lesson.Subject.MATH,
+            status=Lesson.Status.PUBLISHED,
+            duration_minutes=60,
+            cost=1500,
+            description="Линейные уравнения",
+            homework="Решить задачи 1-10",
+        )
+        self.client.force_login(self.teacher)
+
+    def test_group_list_supports_search(self):
+        response = self.client.get(reverse("courses:group_list"), {"q": "Алгебра"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Алгебра 8А")
+        self.assertEqual(response.context["search_query"], "Алгебра")
+
+    def test_teacher_can_duplicate_lesson(self):
+        response = self.client.post(reverse("courses:lesson_duplicate", args=[self.lesson.pk]))
+
+        self.assertEqual(response.status_code, 302)
+        duplicated = Lesson.objects.exclude(pk=self.lesson.pk).get()
+        self.assertEqual(duplicated.group, self.lesson.group)
+        self.assertEqual(duplicated.subject, self.lesson.subject)
+        self.assertEqual(duplicated.status, Lesson.Status.DRAFT)

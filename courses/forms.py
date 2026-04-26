@@ -21,7 +21,7 @@ class StudyGroupForm(forms.ModelForm):
 class LessonForm(forms.ModelForm):
     class Meta:
         model = Lesson
-        fields = ["subject", "duration_minutes", "cost", "description", "homework"]
+        fields = ["subject", "status", "duration_minutes", "cost", "description", "homework"]
 
 
 class VideoLessonForm(forms.ModelForm):
